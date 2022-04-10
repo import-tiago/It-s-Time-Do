@@ -146,6 +146,29 @@ void OLED_OTA_Progress(int status) {
     display.display();
 }
 
+String Get_Firebase_String_from(char *Database_Path) {
+
+    String result = "-1";
+
+    if (Firebase.ready()){
+
+    if (Firebase.RTDB.getString(&fbdo, Database_Path))
+        result = fbdo.stringData();
+    else
+        result = fbdo.errorReason();
+    }
+
+    return result;
+}
+
+void Set_Firebase_String_at(char *Database_Path, char *data) {
+if (Firebase.ready())
+    Firebase.RTDB.setString(&fbdo, Database_Path, data);
+}
+
+int lastMinute = 0;
+int lastSecond = 0;
+
 void setup() {
     pinMode(LED, OUTPUT);
     Serial.begin(115200);
@@ -204,6 +227,9 @@ void setup() {
     auth.user.email = USER_EMAIL;
     auth.user.password = USER_PASSWORD;
 
+    /* Assign the RTDB URL (required) */
+    config.database_url = DATABASE_URL;
+
     // Assign the callback function for the long running token generation task
     config.token_status_callback = tokenStatusCallback; // see addons/TokenHelper.h
 
@@ -226,25 +252,37 @@ void setup() {
 
 void loop() {
 
-    digitalWrite(LED, HIGH);
-    delay(500);
-    digitalWrite(LED, LOW);
-    delay(500);
+    static DateTime now;
 
-    DateTime now = RTC.now();
-    char dateBuffer[12];
+    static char dateBuffer[50];
 
-    display.clearDisplay();
-    display.setTextSize(2);
-    display.setCursor(2, 5);
-    sprintf(dateBuffer, "%02u/%02u/%04u ", now.day(), now.month(), now.year());
-    display.println(dateBuffer);
+    now = RTC.now();
 
-    display.setCursor(12, 25);
-    sprintf(dateBuffer, "%02u:%02u:%02u ", now.hour(), now.minute(), now.second());
-    display.println(dateBuffer);
-    display.setCursor(15, 45);
-    display.print(daysOfTheWeek[now.dayOfTheWeek()]);
+    if (now.second() > lastSecond || !now.second()) {
+        lastSecond = now.second();
 
-    display.display();
+        display.clearDisplay();
+        display.setTextSize(1);
+        display.setCursor(35, 5);
+        sprintf(dateBuffer, "%02d/%02d/%04d", now.day(), now.month(), now.year());
+        display.println(dateBuffer);
+        Set_Firebase_String_at("/Device Calendar", dateBuffer);
+
+        display.setCursor(40, 15);
+        sprintf(dateBuffer, "%02d:%02d:%02d", now.hour(), now.minute(), now.second());
+        display.println(dateBuffer);
+
+        sprintf(dateBuffer, "%02d:%02d", now.hour(), now.minute());
+        if (now.minute() > lastMinute || !now.minute()) {
+            lastMinute = now.minute();
+            Set_Firebase_String_at("/Device Clock", dateBuffer);
+            Serial.print("Clock: ");
+            Serial.println(dateBuffer);
+        }
+
+        display.setCursor(5, 30);
+        sprintf(dateBuffer, "START: %s", Get_Firebase_String_from("/START"));
+        display.print(dateBuffer);
+        display.display();
+    }
 }
