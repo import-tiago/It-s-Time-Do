@@ -19,5 +19,8 @@ void OLED_Print_Calendar(char *calendar);
 void OLED_Print_Clock(char *clock);
 void OLED_Print_Schedule(char *from_cloud);
 void OLED_Print_Home_Screen();
-
+String Current_Clock();
+String Schedule_Clock();
+void OLED_Print_Loading_Screen();
+void Clear_Active_Tasks();
 #endif // OLED_H

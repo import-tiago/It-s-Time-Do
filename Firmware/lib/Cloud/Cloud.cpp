@@ -9,6 +9,29 @@
 // Provide the RTDB payload printing info and other helper functions.
 #include <addons/RTDBHelper.h>
 
+String isValid_Time(String from_cloud) {
+    String result;
+
+    if (from_cloud.length() > 5)
+        result = "-1";
+    else if (from_cloud.indexOf(':') >= 0) {
+        int i = String(from_cloud).indexOf(':');
+
+        int hour = from_cloud.substring(0, i).toInt();
+        int min = from_cloud.substring(i + 1).toInt();
+
+        if ((hour >= 0 && hour <= 23) && (min >= 0 && min <= 59))
+            result = from_cloud;
+
+        else
+            result = "-1";
+
+    } else
+        result = "-1";
+
+    return result;
+}
+
 String Get_Firebase_String_from(char *Database_Path) {
 
     String result = "-1";
