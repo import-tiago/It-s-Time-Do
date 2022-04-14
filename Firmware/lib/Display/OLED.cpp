@@ -1,29 +1,23 @@
 #include "OLED.h"
+#include "Cloud.h"
+#include "DS3231.h"
 #include "WiFi_Secrets.h"
 #include <Arduino.h>
 
-#include "Cloud.h"
-#include "RTClib.h"
 #include <Firebase_ESP_Client.h>
 
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <SPI.h>
+#include <Wire.h>
+
+#define PRINT_SECONDS 1
+#define WITHOUT_SECONDS 0
+
+static Adafruit_SSD1306 display(128, 64, &Wire, -1);
 static char dateBuffer[50];
 
 
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 64 // OLED display height, in pixels
-static Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
-
-static RTC_DS3231 RTC;
-static DateTime now;
-
-void RTC_Init() {
-    if (!RTC.begin()) {
-        Serial.println("RTC Init Fail");
-        while (1) {
-            ;
-        }
-    }
-}
 
 void OLED_Init() {
     if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
@@ -32,6 +26,7 @@ void OLED_Init() {
             ;
         }
     }
+    display.setTextColor(WHITE);
 }
 
 void Display_Check_OTA_Firmware_Update() {
@@ -49,7 +44,7 @@ void Display_Check_OTA_Firmware_Update() {
 }
 
 void OLED_Print_Calendar(char *calendar) {
-    display.clearDisplay();
+
     display.setTextSize(1);
     display.setCursor(32, 5);
     display.println(calendar);
@@ -61,11 +56,10 @@ void OLED_Print_Clock(char *clock) {
     display.println(clock);
 }
 
-void OLED_Print_Schedule(char *from_cloud) {
+void OLED_Print_Schedule(String from_cloud) {
     display.setTextSize(1);
     display.setCursor(5, 30);
     display.print(from_cloud);
-    display.display();
 }
 void OLED_Print_Loading_Screen() {
     display.setTextSize(2);
@@ -75,7 +69,6 @@ void OLED_Print_Loading_Screen() {
 }
 void OLED_Clear() {
     display.clearDisplay();
-    display.display();
 }
 
 void Display_WiFi_Connecting() {
@@ -116,11 +109,17 @@ void OLED_OTA_Progress(int status) {
     display.display();
 }
 
-void OLED_Print_Home_Screen() {
+void OLED_Build_Home_Screen(String _Schedule_Time) {
+
+     OLED_Print_Calendar(Current_Date());
+     OLED_Print_Clock(Current_Clock(PRINT_SECONDS));
+     OLED_Print_Schedule(_Schedule_Time);
+
+    /*
 
     static int lastMinute = 0;
     static int lastSecond = 0;
-    now = RTC.now();
+
 
     if (now.second() > lastSecond || !now.second()) {
         lastSecond = now.second();
@@ -129,7 +128,8 @@ void OLED_Print_Home_Screen() {
         memset(dateBuffer, '\0', sizeof(dateBuffer));
         sprintf(dateBuffer, "%02d/%02d/%04d", now.day(), now.month(), now.year());
         OLED_Print_Calendar(dateBuffer);
-        Set_Firebase_String_at("/Device Calendar", dateBuffer);
+
+
 
         // CL0OCK
         memset(dateBuffer, '\0', sizeof(dateBuffer));
@@ -153,12 +153,7 @@ void OLED_Print_Home_Screen() {
         sprintf(dateBuffer, "START: %s", ScheduleClock);
         OLED_Print_Schedule(dateBuffer);
     }
-}
-
-String Current_Clock() {
-    memset(dateBuffer, '\0', sizeof(dateBuffer));
-    sprintf(dateBuffer, "%02d:%02d", now.hour(), now.minute());
-    return dateBuffer;
+    */
 }
 
 String Schedule_Clock() {
@@ -166,15 +161,20 @@ String Schedule_Clock() {
 }
 
 void Clear_Active_Tasks() {
+    /*
+        char end_data[100];
+        Serial.print("ScheduleClock: ");
+        Serial.println(ScheduleClock);
 
-    char end_data[100];
-    Serial.print("ScheduleClock: ");
-    Serial.println(ScheduleClock);
+        sprintf(end_data, "START: %s, FINISH: %02d:%02d, in %02d/%02d/%04d", ScheduleClock, now.hour(), now.minute(), now.day(), now.month(), now.year());
 
-    sprintf(end_data, "START: %s, FINISH: %02d:%02d, in %02d/%02d/%04d", ScheduleClock, now.hour(), now.minute(), now.day(), now.month(), now.year());
+        Set_Firebase_String_at("/START", "-1");
+        Set_Firebase_String_at("/TASK", "-1");
+        Set_Firebase_String_at("/FINISH", end_data);
+        ScheduleClock = "-1";
+       */
+}
 
-    Set_Firebase_String_at("/START", "-1");
-    Set_Firebase_String_at("/TASK", "-1");
-    Set_Firebase_String_at("/FINISH", end_data);
-    ScheduleClock = "-1";
+void OLED_Print() {
+    display.display();
 }

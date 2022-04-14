@@ -47,6 +47,23 @@ String Get_Firebase_String_from(char *Database_Path) {
     return result;
 }
 
+bool Get_Firebase_Bool_from(char *Database_Path) {
+
+    bool result = 0;
+
+    if (Firebase.ready()) {
+        if (Firebase.RTDB.getBool(&fbdo, Database_Path))
+            result = fbdo.boolData();
+    }
+
+    return result;
+}
+
+void Set_Firebase_Bool_at(char *Database_Path, bool data) {
+    if (Firebase.ready())
+        Firebase.RTDB.setBool(&fbdo, Database_Path, data);
+}
+
 void Set_Firebase_String_at(char *Database_Path, char *data) {
     if (Firebase.ready())
         Firebase.RTDB.setString(&fbdo, Database_Path, data);

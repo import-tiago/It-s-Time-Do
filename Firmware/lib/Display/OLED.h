@@ -7,8 +7,12 @@
 #include <SPI.h>
 #include <Wire.h>
 
+
+
+
+
 // PROTOTYPES
-void RTC_Init();
+
 void OLED_Init();
 void Display_Check_OTA_Firmware_Update();
 void Display_WiFi_Connecting();
@@ -17,10 +21,11 @@ void OLED_OTA_Progress(int status);
 void OLED_Clear();
 void OLED_Print_Calendar(char *calendar);
 void OLED_Print_Clock(char *clock);
-void OLED_Print_Schedule(char *from_cloud);
-void OLED_Print_Home_Screen();
-String Current_Clock();
+void OLED_Print_Schedule(String from_cloud);
+void OLED_Build_Home_Screen(String _Schedule_Time);
 String Schedule_Clock();
 void OLED_Print_Loading_Screen();
 void Clear_Active_Tasks();
+void OLED_Print();
+
 #endif // OLED_H
