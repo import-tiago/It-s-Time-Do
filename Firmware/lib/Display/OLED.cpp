@@ -59,6 +59,7 @@ void OLED_Print_Clock(char *clock) {
 void OLED_Print_Schedule(String from_cloud) {
     display.setTextSize(1);
     display.setCursor(5, 30);
+    display.print("NEXT TASK: ");
     display.print(from_cloud);
 }
 void OLED_Print_Loading_Screen() {

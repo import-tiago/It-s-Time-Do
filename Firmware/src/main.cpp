@@ -140,14 +140,14 @@ void ISR_MOSFETs_Trigger() {
 }
 
 void ISR_Server_Update() {
-    Set_Firebase_String_at("/Device Calendar", Current_Date());
+  //  Set_Firebase_String_at("/Device Calendar", Current_Date());
     Set_Firebase_String_at("/Device Clock", Current_Clock(WITHOUT_SECONDS));
 }
 
-Ticker ISR_GPIOs_Read_Controller(ISR_GPIOs_Read, 100, 0, MILLIS);
-Ticker ISR_Display_Update_Controller(ISR_Display_Update, 100, 0, MILLIS);
-Ticker ISR_Server_Monitor_Controller(ISR_Server_Monitor, 100, 0, MILLIS);
-Ticker ISR_Server_Update_Controller(ISR_Server_Update, 100, 0, MILLIS);
+Ticker ISR_GPIOs_Read_Controller(ISR_GPIOs_Read, 1, 0, MILLIS);
+Ticker ISR_Display_Update_Controller(ISR_Display_Update, 1, 0, MILLIS);
+Ticker ISR_Server_Monitor_Controller(ISR_Server_Monitor, 1, 0, MILLIS);
+Ticker ISR_Server_Update_Controller(ISR_Server_Update, 1, 0, MILLIS);
 Ticker ISR_MOSFETs_Trigger_Controller(ISR_MOSFETs_Trigger, 1, 0, MILLIS);
 
 void Remote_Buttons_Monitor() {
@@ -221,11 +221,12 @@ void setup() {
 
 void loop() {
     ISR_Display_Update_Controller.update();
-
+    ISR_Server_Update_Controller.update();
+    ISR_Server_Monitor_Controller.update();
     // ISR_GPIOs_Read_Controller.update();
-     ISR_Server_Monitor_Controller.update();
+
     // ISR_MOSFETs_Trigger_Controller.update();
-    // ISR_Server_Update_Controller.update();
+    //
 
     /*
         if (Current_Clock() == Schedule_Clock() && Last_Start_Time != "-1") {
