@@ -14,6 +14,8 @@
 #include "OLED.h"
 #include "WiFi_Secrets.h"
 
+unsigned long schedule_timestamp, current_timestamp;
+
 #define LED_NETWORK_STATUS 2
 
 unsigned long MOSFET_Trigger_Time[NUMBER_OF_BUTTONS][3];
@@ -70,17 +72,15 @@ void ISR_Display_Update() {
     digitalWrite(LED, !digitalRead(LED));
 
     OLED_Clear();
-    OLED_Build_Home_Screen(Schedule_Time != "" ? Schedule_Time : "NO SCHEDULE");
+    OLED_Build_Home_Screen(Schedule_Time != "" ? Schedule_Time : "FREE");
     OLED_Print();
-
-    Serial.println(Schedule_Time);
 }
 
 void ISR_Server_Monitor() {
 
-    Remote_Buttons_Monitor();
-
     Remote_Schedule_Monitor();
+
+    // Remote_Buttons_Monitor();
 }
 
 void ISR_Build_Current_Machine_State_JSON() {
@@ -140,15 +140,16 @@ void ISR_MOSFETs_Trigger() {
 }
 
 void ISR_Server_Update() {
-  //  Set_Firebase_String_at("/Device Calendar", Current_Date());
+    Set_Firebase_String_at("/Device Calendar", Current_Date(FULL));
     Set_Firebase_String_at("/Device Clock", Current_Clock(WITHOUT_SECONDS));
+    Set_Firebase_String_at("/Device Schedule", Schedule_Time != "" ? Schedule_Time : "FREE");
 }
 
-Ticker ISR_GPIOs_Read_Controller(ISR_GPIOs_Read, 1, 0, MILLIS);
-Ticker ISR_Display_Update_Controller(ISR_Display_Update, 1, 0, MILLIS);
-Ticker ISR_Server_Monitor_Controller(ISR_Server_Monitor, 1, 0, MILLIS);
-Ticker ISR_Server_Update_Controller(ISR_Server_Update, 1, 0, MILLIS);
-Ticker ISR_MOSFETs_Trigger_Controller(ISR_MOSFETs_Trigger, 1, 0, MILLIS);
+// Ticker ISR_GPIOs_Read_Controller(ISR_GPIOs_Read, 100, 0, MILLIS);
+Ticker ISR_Display_Update_Controller(ISR_Display_Update, 100, 0, MILLIS);
+Ticker ISR_Server_Monitor_Controller(ISR_Server_Monitor, 100, 0, MILLIS);
+Ticker ISR_Server_Update_Controller(ISR_Server_Update, 100, 0, MILLIS);
+// Ticker ISR_MOSFETs_Trigger_Controller(ISR_MOSFETs_Trigger, 100, 0, MILLIS);
 
 void Remote_Buttons_Monitor() {
     if (Get_Firebase_Bool_from("Button_Start") && MOSFET_1_STATE == MOSFET_DISABLED) {
@@ -185,6 +186,8 @@ void Remote_Buttons_Monitor() {
 void Remote_Schedule_Monitor() {
 
     Schedule_Time = isValid_Time(Get_Firebase_String_from("/SCHEDULE_TIME"));
+
+
 }
 
 void setup() {
@@ -205,27 +208,70 @@ void setup() {
 
     Checks_OTA_Firmware_Update();
 
-    digitalWrite(BUZZER, HIGH);
-    delay(50);
-    digitalWrite(BUZZER, LOW);
+
 
     OLED_Clear();
     OLED_Print_Loading_Screen();
 
-    ISR_GPIOs_Read_Controller.start();
+    while(!Set_Firebase_String_at("/SCHEDULE_TIME", "FREE")){
+            ;
+            }
+
+    // ISR_GPIOs_Read_Controller.start();
+
+    // ISR_MOSFETs_Trigger_Controller.start();
+
+    ISR_Server_Update_Controller.start();
     ISR_Display_Update_Controller.start();
     ISR_Server_Monitor_Controller.start();
-    ISR_MOSFETs_Trigger_Controller.start();
-    ISR_Server_Update_Controller.start();
 }
 
 void loop() {
+
     ISR_Display_Update_Controller.update();
     ISR_Server_Update_Controller.update();
     ISR_Server_Monitor_Controller.update();
-    // ISR_GPIOs_Read_Controller.update();
 
-    // ISR_MOSFETs_Trigger_Controller.update();
+    if (isValid_Time(Schedule_Time)) {
+        int hour = Schedule_Time.substring(0, Schedule_Time.indexOf(":")).toInt();
+        int min = Schedule_Time.substring(Schedule_Time.indexOf(":") + 1).toInt();
+
+        schedule_timestamp = unix_time_in_seconds(hour, min, 0, Current_Date(JUST_DAY).toInt(), Current_Date(JUST_MONTH).toInt(), Current_Date(JUST_YEAR).toInt());
+        current_timestamp = unix_time_in_seconds(Current_Clock(JUST_HOUR).toInt(), Current_Clock(JUST_MIN).toInt(), 0, Current_Date(JUST_DAY).toInt(), Current_Date(JUST_MONTH).toInt(), Current_Date(JUST_YEAR).toInt());
+
+        if (current_timestamp >= schedule_timestamp && current_timestamp <= (schedule_timestamp + 120)){
+            digitalWrite(BUZZER, HIGH);
+            delay(500);
+            digitalWrite(BUZZER, LOW);
+
+            while(!Set_Firebase_String_at("/SCHEDULE_TIME", "FREE")){
+            ;
+            }
+        }
+
+
+        /*
+                 Serial.println(Current_Clock(JUST_HOUR).toInt());
+                 Serial.println(Current_Clock(JUST_MIN).toInt());
+                 Serial.println(Current_Date(JUST_DAY).toInt());
+                 Serial.println(Current_Date(JUST_MONTH).toInt());
+                 Serial.println(Current_Date(JUST_YEAR).toInt());
+                 Serial.println("-------------------");
+                 */
+
+        /*
+                Serial.print("schedule_timestamp: ");
+                Serial.println(schedule_timestamp);
+
+                Serial.print("current_timestamp: ");
+                Serial.println(current_timestamp);
+                */
+
+        //
+    }
+
+    //  ISR_GPIOs_Read_Controller.update();
+    //  ISR_MOSFETs_Trigger_Controller.update();
     //
 
     /*

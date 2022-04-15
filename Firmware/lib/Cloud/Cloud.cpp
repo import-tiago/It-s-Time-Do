@@ -13,7 +13,7 @@ String isValid_Time(String from_cloud) {
     String result;
 
     if (from_cloud.length() > 5)
-        result = "-1";
+        result = "FREE";
     else if (from_cloud.indexOf(':') >= 0) {
         int i = String(from_cloud).indexOf(':');
 
@@ -24,10 +24,10 @@ String isValid_Time(String from_cloud) {
             result = from_cloud;
 
         else
-            result = "-1";
+            result = "FREE";
 
     } else
-        result = "-1";
+        result = "FREE";
 
     return result;
 }
@@ -38,8 +38,8 @@ String Get_Firebase_String_from(char *Database_Path) {
 
     if (Firebase.ready()) {
 
-        if (Firebase.RTDB.getString(&fbdo, Database_Path))
-            result = fbdo.stringData();
+        if (Firebase.RTDB.getString(&fbdo2, Database_Path))
+            result = fbdo2.stringData();
         else
             result = fbdo.errorReason();
     }
@@ -64,9 +64,14 @@ void Set_Firebase_Bool_at(char *Database_Path, bool data) {
         Firebase.RTDB.setBool(&fbdo, Database_Path, data);
 }
 
-void Set_Firebase_String_at(char *Database_Path, char *data) {
-    if (Firebase.ready())
-        Firebase.RTDB.setString(&fbdo, Database_Path, data);
+bool Set_Firebase_String_at(String Database_Path, String data) {
+    bool response = false;
+    if (Firebase.ready()){
+         if(Firebase.RTDB.setString(&fbdo, Database_Path, data))
+            response = true;
+
+    }
+
 }
 
 // The Firebase Storage download callback function

@@ -43,14 +43,14 @@ void Display_Check_OTA_Firmware_Update() {
     display.display();
 }
 
-void OLED_Print_Calendar(char *calendar) {
+void OLED_Print_Calendar(String calendar) {
 
     display.setTextSize(1);
     display.setCursor(32, 5);
     display.println(calendar);
 }
 
-void OLED_Print_Clock(char *clock) {
+void OLED_Print_Clock(String clock) {
     display.setTextSize(1);
     display.setCursor(37, 15);
     display.println(clock);
@@ -64,7 +64,7 @@ void OLED_Print_Schedule(String from_cloud) {
 }
 void OLED_Print_Loading_Screen() {
     display.setTextSize(2);
-    display.setCursor(2, 30);
+    display.setCursor(2, 25);
     display.print("LOADING...");
     display.display();
 }
@@ -112,7 +112,7 @@ void OLED_OTA_Progress(int status) {
 
 void OLED_Build_Home_Screen(String _Schedule_Time) {
 
-     OLED_Print_Calendar(Current_Date());
+     OLED_Print_Calendar(Current_Date(FULL));
      OLED_Print_Clock(Current_Clock(PRINT_SECONDS));
      OLED_Print_Schedule(_Schedule_Time);
 
