@@ -17,8 +17,6 @@
 static Adafruit_SSD1306 display(128, 64, &Wire, -1);
 static char dateBuffer[50];
 
-
-
 void OLED_Init() {
     if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
         Serial.println(F("OLED Init Fail"));
@@ -51,14 +49,14 @@ void OLED_Print_Calendar(String calendar) {
 }
 
 void OLED_Print_Clock(String clock) {
-    display.setTextSize(1);
-    display.setCursor(37, 15);
+    display.setTextSize(2);
+    display.setCursor(15, 22);
     display.println(clock);
 }
 
 void OLED_Print_Schedule(String from_cloud) {
     display.setTextSize(1);
-    display.setCursor(5, 30);
+    display.setCursor(3, 50);
     display.print("NEXT TASK: ");
     display.print(from_cloud);
 }
@@ -112,9 +110,15 @@ void OLED_OTA_Progress(int status) {
 
 void OLED_Build_Home_Screen(String _Schedule_Time) {
 
-     OLED_Print_Calendar(Current_Date(FULL));
-     OLED_Print_Clock(Current_Clock(PRINT_SECONDS));
-     OLED_Print_Schedule(_Schedule_Time);
+    if (RTC_Status()) {
+        OLED_Print_Calendar(Current_Date(FULL));
+        OLED_Print_Clock(Current_Clock(PRINT_SECONDS));
+        OLED_Print_Schedule(_Schedule_Time);
+    } else {
+        display.setTextSize(2);
+        display.setCursor(15, 25);
+        display.print("RTC FAIL");
+    }
 
     /*
 

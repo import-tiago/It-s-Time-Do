@@ -10,10 +10,12 @@
 #include <addons/RTDBHelper.h>
 
 String isValid_Time(String from_cloud) {
-    String result;
+    String result = from_cloud;
+    if(from_cloud != "WORKING..."){
 
-    if (from_cloud.length() > 5)
+    if (from_cloud.length() > 5 )
         result = "FREE";
+
     else if (from_cloud.indexOf(':') >= 0) {
         int i = String(from_cloud).indexOf(':');
 
@@ -28,6 +30,7 @@ String isValid_Time(String from_cloud) {
 
     } else
         result = "FREE";
+    }
 
     return result;
 }
@@ -96,7 +99,7 @@ void fcsDownloadCallback(FCS_DownloadStatusInfo info) {
 
 void Download_New_Firmware_by_OTA() {
 
-    if (!Firebase.Storage.downloadOTA(&fbdo, STORAGE_BUCKET_ID, "test/firmware/bin/firmware.bin", fcsDownloadCallback))
+    if (!Firebase.Storage.downloadOTA(&fbdo, STORAGE_BUCKET_ID, FIRMWARE_ADDRESS, fcsDownloadCallback))
         Serial.println(fbdo.errorReason());
 }
 
@@ -125,9 +128,11 @@ void Checks_OTA_Firmware_Update() {
 
             if (strcmp(String((char *)NVS.getObject("FW")).c_str(), New_Firmware_Version) != 0) {
                 Serial.println("New firmware version available");
-
+NVS.setObject("FW", &New_Firmware_Version, sizeof(New_Firmware_Version));
                 Download_New_Firmware_by_OTA();
-                NVS.setObject("FW", &New_Firmware_Version, sizeof(New_Firmware_Version));
+                //Serial.print("New_Firmware_Version: ");
+              //  Serial.println(New_Firmware_Version);
+
             } else
                 Serial.println("Firmware no needs update.");
         }

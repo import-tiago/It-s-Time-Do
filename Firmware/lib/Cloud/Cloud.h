@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include <Firebase_ESP_Client.h>
 
-#define FIRMWARE_ADDRESS "/firmware.bin"
+#define FIRMWARE_ADDRESS "bin/firmware.bin"
 static String ScheduleClock;
 static String Last_Start_Time;
 

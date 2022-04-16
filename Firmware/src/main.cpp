@@ -14,6 +14,34 @@
 #include "OLED.h"
 #include "WiFi_Secrets.h"
 
+#include <ESP32Time.h>
+
+ESP32Time rtc;
+
+uint32_t task_start_timestamp = 0;
+bool last_led = false;
+
+bool debounceInput(int pin) {
+    bool state = false;
+#define SAMPLES 100
+
+
+    uint32_t mean = 0;
+
+    for (int i = 0; i < SAMPLES; i++)
+        mean += (uint32_t)analogRead(pin);
+
+    mean /= (uint32_t)SAMPLES;
+
+    if (mean >= 220) //250AD = 0,7V
+        state = true;
+
+    else
+        state = false;
+
+    return state;
+}
+
 unsigned long schedule_timestamp, current_timestamp;
 
 #define LED_NETWORK_STATUS 2
@@ -68,8 +96,6 @@ void ISR_GPIOs_Read() {
 }
 
 void ISR_Display_Update() {
-
-    digitalWrite(LED, !digitalRead(LED));
 
     OLED_Clear();
     OLED_Build_Home_Screen(Schedule_Time != "" ? Schedule_Time : "FREE");
@@ -140,9 +166,11 @@ void ISR_MOSFETs_Trigger() {
 }
 
 void ISR_Server_Update() {
-    Set_Firebase_String_at("/Device Calendar", Current_Date(FULL));
-    Set_Firebase_String_at("/Device Clock", Current_Clock(WITHOUT_SECONDS));
-    Set_Firebase_String_at("/Device Schedule", Schedule_Time != "" ? Schedule_Time : "FREE");
+    Set_Firebase_String_at("/Device/Calendar", Current_Date(FULL));
+    Set_Firebase_String_at("/Device/Clock", Current_Clock(WITHOUT_SECONDS));
+    Set_Firebase_String_at("/Device/Schedule", (Schedule_Time != "" || Schedule_Time == "WORKING...") ? Schedule_Time : "FREE");
+    Set_Firebase_Bool_at("/LED", debounceInput(LED));
+    // Set_Firebase_Bool_at("/WASHING", last_led);
 }
 
 // Ticker ISR_GPIOs_Read_Controller(ISR_GPIOs_Read, 100, 0, MILLIS);
@@ -185,9 +213,7 @@ void Remote_Buttons_Monitor() {
 
 void Remote_Schedule_Monitor() {
 
-    Schedule_Time = isValid_Time(Get_Firebase_String_from("/SCHEDULE_TIME"));
-
-
+    Schedule_Time = isValid_Time(Get_Firebase_String_from("/START"));
 }
 
 void setup() {
@@ -208,21 +234,21 @@ void setup() {
 
     Checks_OTA_Firmware_Update();
 
-
-
     OLED_Clear();
     OLED_Print_Loading_Screen();
 
-    while(!Set_Firebase_String_at("/SCHEDULE_TIME", "FREE")){
+    /*
+        while (!Set_Firebase_String_at("/START", "FREE")) {
             ;
-            }
+        }
+        */
 
     // ISR_GPIOs_Read_Controller.start();
 
     // ISR_MOSFETs_Trigger_Controller.start();
-
-    ISR_Server_Update_Controller.start();
     ISR_Display_Update_Controller.start();
+    ISR_Server_Update_Controller.start();
+
     ISR_Server_Monitor_Controller.start();
 }
 
@@ -232,6 +258,32 @@ void loop() {
     ISR_Server_Update_Controller.update();
     ISR_Server_Monitor_Controller.update();
 
+    if (last_led && !debounceInput(LED)) {
+        Serial.println(last_led);
+        Serial.println("@@@@@@@@@@@@@");
+        uint32_t delta = 0;
+
+        uint32_t end_task = 0;
+
+        end_task = unix_time_in_seconds(Current_Clock(JUST_HOUR).toInt(), Current_Clock(JUST_MIN).toInt(), 0, Current_Date(JUST_DAY).toInt(), Current_Date(JUST_MONTH).toInt(), Current_Date(JUST_YEAR).toInt());
+
+        delta = end_task - task_start_timestamp;
+
+        delta /= 60;
+
+        int h = delta / 60;
+        int m = (delta - h);
+
+        char last_task_delta[20];
+        sprintf(last_task_delta, "%02dh%02dmin", h, m);
+
+        Set_Firebase_String_at("/LAST_TASK/" + String(end_task), last_task_delta);
+        last_led = false;
+        while (!Set_Firebase_String_at("/START", "FREE")) {
+            ;
+        }
+    }
+
     if (isValid_Time(Schedule_Time)) {
         int hour = Schedule_Time.substring(0, Schedule_Time.indexOf(":")).toInt();
         int min = Schedule_Time.substring(Schedule_Time.indexOf(":") + 1).toInt();
@@ -239,16 +291,34 @@ void loop() {
         schedule_timestamp = unix_time_in_seconds(hour, min, 0, Current_Date(JUST_DAY).toInt(), Current_Date(JUST_MONTH).toInt(), Current_Date(JUST_YEAR).toInt());
         current_timestamp = unix_time_in_seconds(Current_Clock(JUST_HOUR).toInt(), Current_Clock(JUST_MIN).toInt(), 0, Current_Date(JUST_DAY).toInt(), Current_Date(JUST_MONTH).toInt(), Current_Date(JUST_YEAR).toInt());
 
-        if (current_timestamp >= schedule_timestamp && current_timestamp <= (schedule_timestamp + 120)){
-            digitalWrite(BUZZER, HIGH);
-            delay(500);
-            digitalWrite(BUZZER, LOW);
+        if ((current_timestamp >= schedule_timestamp && current_timestamp <= (schedule_timestamp + 120)) && !last_led) {
 
-            while(!Set_Firebase_String_at("/SCHEDULE_TIME", "FREE")){
-            ;
+            Serial.print("current_timestamp: ");
+            Serial.println(current_timestamp);
+            Serial.print("schedule_timestamp: ");
+            Serial.println(schedule_timestamp);
+            Serial.println("----------");
+
+            digitalWrite(RELAY, HIGH);
+            delay(300);
+            digitalWrite(RELAY, LOW);
+
+            while (!debounceInput(LED)) {
+                ;
+            }
+            last_led = true;
+            task_start_timestamp = current_timestamp;
+
+            while (!Set_Firebase_String_at("/START", "WORKING...")) {
+                ;
+            }
+
+            Schedule_Time = "WORKING...";
+
+            while (!Set_Firebase_String_at("/Device/Schedule", "WORKING...")) {
+                ;
             }
         }
-
 
         /*
                  Serial.println(Current_Clock(JUST_HOUR).toInt());
@@ -278,9 +348,9 @@ void loop() {
         if (Current_Clock() == Schedule_Clock() && Last_Start_Time != "-1") {
             Set_Firebase_String_at("/START", "-1");
             Last_Start_Time = "-1";
-            digitalWrite(BUZZER, HIGH);
+            digitalWrite(RELAY, HIGH);
             delay(1000);
-            digitalWrite(BUZZER, LOW);
+            digitalWrite(RELAY, LOW);
         }
 
         if (!Wash_Machine_State.LED_Ciclo_Iniciado && ScheduleClock != "-1") {

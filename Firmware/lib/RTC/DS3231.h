@@ -28,6 +28,7 @@ unix_time_in_seconds( uint8_t hrs, uint8_t min, uint8_t sec, uint8_t day, uint8_
 #define WITHOUT_SECONDS 0
 
 
+
 #define JUST_DAY   0
 #define JUST_MONTH 1
 #define JUST_YEAR  2
@@ -40,5 +41,6 @@ unix_time_in_seconds( uint8_t hrs, uint8_t min, uint8_t sec, uint8_t day, uint8_
 String Current_Date(int format);
 String Current_Clock(int format);
 void RTC_Init();
+bool RTC_Status();
 
 #endif // DS3231_H

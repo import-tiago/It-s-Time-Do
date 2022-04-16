@@ -3,8 +3,8 @@
 
 #include <Arduino.h>
 
-#define LED 2
-#define BUZZER 4
+#define LED 36
+#define RELAY 23
 
 
 

@@ -1,22 +1,28 @@
 #include "DS3231.h"
+#include "Board_Pins.h"
 #include "RTClib.h"
 #include <Arduino.h>
 
 static RTC_DS3231 RTC;
 static DateTime now;
+static bool RTC_Init_Fail = false;
 
 static char RTC_Buffer[11]; /* dd/mm/yyyy */
 
 void RTC_Init() {
     if (!RTC.begin()) {
-        Serial.println("RTC Init Fail");
         while (1) {
-            ;
+            Serial.println("RTC Init Fail");
+            RTC_Init_Fail = true;
         }
     }
 
     // if (RTC.lostPower())
-    //   RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    //     RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
+}
+
+bool RTC_Status() {
+    return !RTC_Init_Fail;
 }
 
 String Current_Date(int format) {
