@@ -1,3 +1,5 @@
+#define FIRMWARE_VERSION "1.0"
+
 /* Native libraries */
 #include <Arduino.h>
 
@@ -43,7 +45,7 @@ bool Wash_Machine_Power_State(int pin) {
 
 void ISR_Display_Update() {
     OLED_Clear();
-    OLED_Build_Home_Screen(Schedule_on_Server != "" ? Schedule_on_Server : "FREE");
+    OLED_Build_Home_Screen(Schedule_on_Server != "" ? Schedule_on_Server : "FREE", FIRMWARE_VERSION);
     OLED_Print();
 }
 

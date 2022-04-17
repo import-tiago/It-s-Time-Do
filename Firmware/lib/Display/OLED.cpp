@@ -109,9 +109,16 @@ void OLED_OTA_Progress(int status) {
     display.display();
 }
 
-void OLED_Build_Home_Screen(String _Schedule_Time) {
+void OLED_Print_Firmware_Version(String Firmware_Version) {
+    display.setTextSize(1);
+    display.setCursor(0, 0);
+    display.println("v" + Firmware_Version);
+}
+
+void OLED_Build_Home_Screen(String _Schedule_Time, String Firmware_Version) {
 
     if (RTC_Status()) {
+        OLED_Print_Firmware_Version(Firmware_Version);
         OLED_Print_Calendar(Current_Date(FULL));
         OLED_Print_Clock(Current_Clock(PRINT_SECONDS));
         OLED_Print_Schedule(_Schedule_Time);

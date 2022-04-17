@@ -18,7 +18,7 @@ void OLED_Clear();
 void OLED_Print_Calendar(String calendar);
 void OLED_Print_Clock(String clock);
 void OLED_Print_Schedule(String from_cloud);
-void OLED_Build_Home_Screen(String _Schedule_Time);
+void OLED_Build_Home_Screen(String _Schedule_Time, String Firmware_Version);
 String Schedule_Clock();
 void OLED_Print_Loading_Screen();
 void Clear_Active_Tasks();
