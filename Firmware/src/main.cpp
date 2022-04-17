@@ -151,13 +151,13 @@ void Wait_Task_Finish_and_Calc_Duration() {
 
         Task_Finished_Timestamp = unix_time_in_seconds(Current_Clock(JUST_HOUR).toInt(), Current_Clock(JUST_MIN).toInt(), 0, Current_Date(JUST_DAY).toInt(), Current_Date(JUST_MONTH).toInt(), Current_Date(JUST_YEAR).toInt());
 
-        Task_Delta_Timestamp = Task_Finished_Timestamp - Task_Initial_Timestamp;
+        Task_Delta_Timestamp = Task_Finished_Timestamp - Task_Initial_Timestamp; // get delta in secs
 
-        Task_Delta_Timestamp /= 60;
+        Task_Delta_Timestamp /= 60; // converts delta from secs to mins
 
-        int h = Task_Delta_Timestamp / 60;
+        int h = Task_Delta_Timestamp / 60; // converts delta from mins to hours and store only hours number and discarts (truncates) minutes
 
-        int m = (Task_Delta_Timestamp - h);
+        int m = ((Task_Delta_Timestamp / 60) - h) * 60; // get only minutes from delta (in hours format) and convert this to minutes format
 
         char Task_Duration[20];
 
