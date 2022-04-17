@@ -108,7 +108,9 @@ void Checks_OTA_Firmware_Update() {
     Display_Check_OTA_Firmware_Update();
 
     Serial.println("Check_OTA_Firmware_Update");
+
     char New_Firmware_Version[100] = {'\0'};
+
     memset(New_Firmware_Version, '\0', sizeof(New_Firmware_Version));
 
     if (Firebase.ready()) {
@@ -119,19 +121,24 @@ void Checks_OTA_Firmware_Update() {
             FileMetaInfo meta = fbdo.metaData();
 
             sprintf(New_Firmware_Version, String(meta.downloadTokens.c_str()).c_str());
+
             Flash_Memory_Read_Variables();
+
             Serial.print("LOCAL  Firmware Token: ");
+
             Serial.println(String((char *)NVS.getObject("FW")).c_str());
 
             Serial.print("SERVER Firmware Token: ");
+
             Serial.println(New_Firmware_Version);
 
             if (strcmp(String((char *)NVS.getObject("FW")).c_str(), New_Firmware_Version) != 0) {
+
                 Serial.println("New firmware version available");
+
                 NVS.setObject("FW", &New_Firmware_Version, sizeof(New_Firmware_Version));
+
                 Download_New_Firmware_by_OTA();
-                // Serial.print("New_Firmware_Version: ");
-                //  Serial.println(New_Firmware_Version);
 
             } else
                 Serial.println("Firmware no needs update.");
