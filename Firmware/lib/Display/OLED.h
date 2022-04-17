@@ -7,10 +7,6 @@
 #include <SPI.h>
 #include <Wire.h>
 
-
-
-
-
 // PROTOTYPES
 
 void OLED_Init();

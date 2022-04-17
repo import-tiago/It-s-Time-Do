@@ -10,26 +10,28 @@
 #include <addons/RTDBHelper.h>
 
 String isValid_Time(String from_cloud) {
+
     String result = from_cloud;
-    if(from_cloud != "WORKING..."){
 
-    if (from_cloud.length() > 5 )
-        result = "FREE";
+    if (from_cloud != "WORKING...") {
 
-    else if (from_cloud.indexOf(':') >= 0) {
-        int i = String(from_cloud).indexOf(':');
-
-        int hour = from_cloud.substring(0, i).toInt();
-        int min = from_cloud.substring(i + 1).toInt();
-
-        if ((hour >= 0 && hour <= 23) && (min >= 0 && min <= 59))
-            result = from_cloud;
-
-        else
+        if (from_cloud.length() > 5)
             result = "FREE";
 
-    } else
-        result = "FREE";
+        else if (from_cloud.indexOf(':') >= 0) {
+            int i = String(from_cloud).indexOf(':');
+
+            int hour = from_cloud.substring(0, i).toInt();
+            int min = from_cloud.substring(i + 1).toInt();
+
+            if ((hour >= 0 && hour <= 23) && (min >= 0 && min <= 59))
+                result = from_cloud;
+
+            else
+                result = "FREE";
+
+        } else
+            result = "FREE";
     }
 
     return result;
@@ -69,12 +71,10 @@ void Set_Firebase_Bool_at(char *Database_Path, bool data) {
 
 bool Set_Firebase_String_at(String Database_Path, String data) {
     bool response = false;
-    if (Firebase.ready()){
-         if(Firebase.RTDB.setString(&fbdo, Database_Path, data))
+    if (Firebase.ready()) {
+        if (Firebase.RTDB.setString(&fbdo, Database_Path, data))
             response = true;
-
     }
-
 }
 
 // The Firebase Storage download callback function
@@ -128,10 +128,10 @@ void Checks_OTA_Firmware_Update() {
 
             if (strcmp(String((char *)NVS.getObject("FW")).c_str(), New_Firmware_Version) != 0) {
                 Serial.println("New firmware version available");
-NVS.setObject("FW", &New_Firmware_Version, sizeof(New_Firmware_Version));
+                NVS.setObject("FW", &New_Firmware_Version, sizeof(New_Firmware_Version));
                 Download_New_Firmware_by_OTA();
-                //Serial.print("New_Firmware_Version: ");
-              //  Serial.println(New_Firmware_Version);
+                // Serial.print("New_Firmware_Version: ");
+                //  Serial.println(New_Firmware_Version);
 
             } else
                 Serial.println("Firmware no needs update.");

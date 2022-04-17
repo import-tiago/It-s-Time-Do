@@ -56,7 +56,7 @@ void OLED_Print_Clock(String clock) {
 
 void OLED_Print_Schedule(String from_cloud) {
     display.setTextSize(1);
-    display.setCursor(3, 50);
+    display.setCursor(2, 50);
     display.print("NEXT TASK: ");
     display.print(from_cloud);
 }
@@ -95,6 +95,7 @@ void Display_Firebase_Connecting() {
 }
 
 void OLED_OTA_Progress(int status) {
+
     display.clearDisplay();
     display.setTextColor(WHITE);
 
@@ -119,65 +120,10 @@ void OLED_Build_Home_Screen(String _Schedule_Time) {
         display.setCursor(15, 25);
         display.print("RTC FAIL");
     }
-
-    /*
-
-    static int lastMinute = 0;
-    static int lastSecond = 0;
-
-
-    if (now.second() > lastSecond || !now.second()) {
-        lastSecond = now.second();
-
-        // CALENDAR
-        memset(dateBuffer, '\0', sizeof(dateBuffer));
-        sprintf(dateBuffer, "%02d/%02d/%04d", now.day(), now.month(), now.year());
-        OLED_Print_Calendar(dateBuffer);
-
-
-
-        // CL0OCK
-        memset(dateBuffer, '\0', sizeof(dateBuffer));
-        sprintf(dateBuffer, "%02d:%02d:%02d", now.hour(), now.minute(), now.second());
-        OLED_Print_Clock(dateBuffer);
-        memset(dateBuffer, '\0', sizeof(dateBuffer));
-        sprintf(dateBuffer, "%02d:%02d", now.hour(), now.minute());
-        if (now.minute() > lastMinute || !now.minute()) {
-            lastMinute = now.minute();
-            Set_Firebase_String_at("/Device Clock", dateBuffer);
-        }
-
-        // GET SCHEDULE
-        Last_Start_Time = isValid_Time(Get_Firebase_String_from("/START"));
-
-        if (Last_Start_Time != "-1")
-            ScheduleClock = Last_Start_Time;
-
-        Set_Firebase_String_at("/TASK", (char *)ScheduleClock.c_str());
-
-        sprintf(dateBuffer, "START: %s", ScheduleClock);
-        OLED_Print_Schedule(dateBuffer);
-    }
-    */
 }
 
 String Schedule_Clock() {
     return ScheduleClock;
-}
-
-void Clear_Active_Tasks() {
-    /*
-        char end_data[100];
-        Serial.print("ScheduleClock: ");
-        Serial.println(ScheduleClock);
-
-        sprintf(end_data, "START: %s, FINISH: %02d:%02d, in %02d/%02d/%04d", ScheduleClock, now.hour(), now.minute(), now.day(), now.month(), now.year());
-
-        Set_Firebase_String_at("/START", "-1");
-        Set_Firebase_String_at("/TASK", "-1");
-        Set_Firebase_String_at("/FINISH", end_data);
-        ScheduleClock = "-1";
-       */
 }
 
 void OLED_Print() {

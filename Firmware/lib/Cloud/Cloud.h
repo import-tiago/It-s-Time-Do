@@ -26,5 +26,4 @@ void Checks_OTA_Firmware_Update();
 void Firebase_Init();
 String isValid_Time(String from_cloud);
 
-
 #endif // CLOUD_H
