@@ -1,4 +1,4 @@
-#define FIRMWARE_VERSION "1.0"
+#define FIRMWARE_VERSION "1.1"
 
 /* Native libraries */
 #include <Arduino.h>
@@ -159,7 +159,7 @@ void Wait_Task_Finish_and_Calc_Duration() {
 
         int h = Task_Delta_Timestamp / 60; // converts delta from mins to hours and store only hours number and discarts (truncates) minutes
 
-        int m = ((Task_Delta_Timestamp / 60) - h) * 60; // get only minutes from delta (in hours format) and convert this to minutes format
+        int m = ((Task_Delta_Timestamp / 60.0) - h) * 60; // get only minutes from delta (in hours format) and convert this to minutes format
 
         char Task_Duration[20];
 
