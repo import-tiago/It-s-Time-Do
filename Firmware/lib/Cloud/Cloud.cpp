@@ -9,32 +9,23 @@
 // Provide the RTDB payload printing info and other helper functions.
 #include <addons/RTDBHelper.h>
 
-String isValid_Time(String from_cloud) {
+String isValid_Time(String time) {
 
-    String result = from_cloud;
+    if (time.length() > 5)
+        time = "-1";
 
-    if (from_cloud != "WORKING...") {
+    else if (time.indexOf(":") > 0) {
 
-        if (from_cloud.length() > 5)
-            result = "FREE";
+        int i = time.indexOf(':');
+        int hour = time.substring(0, i).toInt();
+        int min = time.substring(i + 1).toInt();
 
-        else if (from_cloud.indexOf(':') >= 0) {
-            int i = String(from_cloud).indexOf(':');
+        if (!((hour >= 0 && hour <= 23) && (min >= 0 && min <= 59)))
+            time = "-1";
+    } else
+        time = "-1";
 
-            int hour = from_cloud.substring(0, i).toInt();
-            int min = from_cloud.substring(i + 1).toInt();
-
-            if ((hour >= 0 && hour <= 23) && (min >= 0 && min <= 59))
-                result = from_cloud;
-
-            else
-                result = "FREE";
-
-        } else
-            result = "FREE";
-    }
-
-    return result;
+    return time;
 }
 
 String Get_Firebase_String_from(char *Database_Path) {
@@ -63,7 +54,7 @@ bool Get_Firebase_Bool_from(char *Database_Path) {
 
     return result;
 }
-
+/*
 void Set_Firebase_Bool_at(char *Database_Path, bool data) {
     if (Firebase.ready())
         Firebase.RTDB.setBool(&fbdo, Database_Path, data);
@@ -71,11 +62,12 @@ void Set_Firebase_Bool_at(char *Database_Path, bool data) {
 
 bool Set_Firebase_String_at(String Database_Path, String data) {
     bool response = false;
-    if (Firebase.ready()) {
+
         if (Firebase.RTDB.setString(&fbdo, Database_Path, data))
             response = true;
-    }
+
 }
+*/
 
 // The Firebase Storage download callback function
 void fcsDownloadCallback(FCS_DownloadStatusInfo info) {
@@ -147,7 +139,7 @@ void Checks_OTA_Firmware_Update() {
 }
 
 void Firebase_Init() {
-    Display_Firebase_Connecting();
+    // Display_Firebase_Connecting();
     Serial.printf("Firebase Client v%s\n\n", FIREBASE_CLIENT_VERSION);
 
     // Assign the api key (required)
@@ -171,4 +163,8 @@ void Firebase_Init() {
     Firebase.begin(&config, &auth);
 
     Firebase.reconnectWiFi(true);
+}
+
+bool Set_Firebase_JSON_at(String Database_Path, FirebaseJson json) {
+    Firebase.RTDB.updateNodeSilent(&fbdo, Database_Path, &json);
 }

@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-#define WASH_MACHINE_POWER_LED 36
+#define WASHING_MACHINE_POWER_LED 36 // SENSOR VP
 #define RELAY 23
 
 // PROTOTYPES

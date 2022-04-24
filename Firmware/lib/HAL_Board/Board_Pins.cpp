@@ -6,5 +6,5 @@ void Board_Pins_Init() {
     Serial.begin(115200);
 
     pinMode(RELAY, OUTPUT);
-    pinMode(WASH_MACHINE_POWER_LED, INPUT);
+    pinMode(WASHING_MACHINE_POWER_LED, INPUT);
 }

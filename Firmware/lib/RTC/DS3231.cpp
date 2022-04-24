@@ -5,7 +5,7 @@
 
 static RTC_DS3231 RTC;
 static DateTime now;
-static bool RTC_Init_Fail = false;
+static bool RTC_Init_Fail = true;
 
 static char RTC_Buffer[11]; /* dd/mm/yyyy */
 
@@ -15,7 +15,8 @@ void RTC_Init() {
             Serial.println("RTC Init Fail");
             RTC_Init_Fail = true;
         }
-    }
+    } else
+        RTC_Init_Fail = false;
 
     // if (RTC.lostPower())
     //     RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
@@ -27,35 +28,41 @@ bool RTC_Status() {
 
 String Current_Date(int format) {
 
-    now = RTC.now();
+    if (!RTC_Init_Fail) {
+        now = RTC.now();
 
-    if (format == JUST_DAY)
-        sprintf(RTC_Buffer, "%02d", now.day());
+        if (format == JUST_DAY)
+            sprintf(RTC_Buffer, "%02d", now.day());
 
-    else if (format == JUST_MONTH)
-        sprintf(RTC_Buffer, "%02d", now.month());
+        else if (format == JUST_MONTH)
+            sprintf(RTC_Buffer, "%02d", now.month());
 
-    else if (format == JUST_YEAR)
-        sprintf(RTC_Buffer, "%04d", now.year());
+        else if (format == JUST_YEAR)
+            sprintf(RTC_Buffer, "%04d", now.year());
 
-    else if (format == FULL)
-        sprintf(RTC_Buffer, "%02d/%02d/%04d", now.day(), now.month(), now.year());
+        else if (format == FULL)
+            sprintf(RTC_Buffer, "%02d-%02d-%04d", now.day(), now.month(), now.year());
+    } else {
+        sprintf(RTC_Buffer, "RTC FAIL");
+    }
 
     return &RTC_Buffer[0];
 }
 
 String Current_Clock(int format) {
-
-    now = RTC.now();
-    if (format == PRINT_SECONDS)
-        sprintf(RTC_Buffer, "%02d:%02d:%02d", now.hour(), now.minute(), now.second());
-    else if (format == JUST_HOUR)
-        sprintf(RTC_Buffer, "%02d", now.hour());
-    else if (format == JUST_MIN)
-        sprintf(RTC_Buffer, "%02d", now.minute());
-    else
-        sprintf(RTC_Buffer, "%02d:%02d", now.hour(), now.minute());
-
+    if (!RTC_Init_Fail) {
+        now = RTC.now();
+        if (format == PRINT_SECONDS)
+            sprintf(RTC_Buffer, "%02d:%02d:%02d", now.hour(), now.minute(), now.second());
+        else if (format == JUST_HOUR)
+            sprintf(RTC_Buffer, "%02d", now.hour());
+        else if (format == JUST_MIN)
+            sprintf(RTC_Buffer, "%02d", now.minute());
+        else
+            sprintf(RTC_Buffer, "%02d:%02d", now.hour(), now.minute());
+    } else {
+        sprintf(RTC_Buffer, "RTC FAIL");
+    }
     return &RTC_Buffer[0];
 }
 
