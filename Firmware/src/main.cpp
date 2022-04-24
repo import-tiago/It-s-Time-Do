@@ -3,7 +3,11 @@
 v1.0 - Initial release.
 v1.1 - Bug fix in task duration calcs.
 v1.2 - Update library 'Firebase-ESP32' from  v3.1.5 to v3.2.0.
-v1.3 - Reading and writing data on the server changed to a single JSON packet.
+v1.3 - Reading and writing data from/to server changed to JSON method.
+     - More information besides 'task duration' added to the finished task log.
+     - New data struct standard defined to store data in the real time database.
+     - Print current task duration while waits the task finish.
+     - Allows task duration monitor/log works from local or remote START trigger.
 */
 
 /* Native libraries */
@@ -46,13 +50,18 @@ struct Washing_Machine_Parameters {
 
 uint32_t Task_Initial_Timestamp = 0;
 String Next_Task = "FREE";
+String Start_Field;
 
-FirebaseJson JSON;                 // or constructor with contents e.g. FirebaseJson JSON("{\"a\":true}");
-FirebaseJsonArray arr;             // or constructor with contents e.g. FirebaseJsonArray arr("[1,2,true,\"test\"]");
-FirebaseJsonData JSON_Field_Value; // object that keeps the deserializing JSON_Field_Value
+bool local_start = false;
+
+FirebaseJson JSON;
+FirebaseJsonData JSON_Field_Value;
 
 void Its_Time_Do();
-void Wait_Task_Finish_and_Calc_Duration();
+void Wait_Task_Finish();
+String Task_Duration_Calc(uint32_t init_timestamp, uint32_t end_timestamp);
+
+void Start_Washing_Machine(uint32_t init_timestamp);
 
 void Check_and_Fix_Fields_in_RTDB() {
 
@@ -80,12 +89,18 @@ bool Get_Washing_Machine_Power_State(int pin) {
 }
 
 void ISR_Display_Update() {
+
     OLED_Clear();
-    OLED_Build_Home_Screen(Next_Task != "" ? Next_Task : "FREE", FIRMWARE_VERSION);
+
+    if (!Washing_Machine.current_power_state)
+        OLED_Build_Home_Screen(Next_Task, FIRMWARE_VERSION);
+    else
+        OLED_Build_Working_Screen(Task_Duration_Calc(Task_Initial_Timestamp, unix_time_in_seconds(Current_Clock(JUST_HOUR).toInt(), Current_Clock(JUST_MIN).toInt(), 0, Current_Date(JUST_DAY).toInt(), Current_Date(JUST_MONTH).toInt(), Current_Date(JUST_YEAR).toInt())), FIRMWARE_VERSION);
+
     OLED_Print();
 }
 
-void ISR_Server_Update() {
+void ISR_Cloud_Communication() {
 
     JSON.clear();
 
@@ -100,7 +115,10 @@ void ISR_Server_Update() {
 
     JSON.set("/Washing_Machine/State", Washing_Machine.current_power_state ? "ON" : "OFF");
 
-    JSON.set("/START", (Washing_Machine.starting || Washing_Machine.current_power_state) ? Washing_Machine.WORKING : Washing_Machine.FREE);
+    if (isValid_Time(Next_Task) == "-1" || Washing_Machine.starting || local_start) {
+        local_start = false;
+        JSON.set("/START", (Washing_Machine.starting || Washing_Machine.current_power_state) ? Washing_Machine.WORKING : Washing_Machine.FREE);
+    }
 
     if (Washing_Machine.task_finished) {
         static char path[100] = {0};
@@ -124,7 +142,7 @@ void ISR_Hardware_Inputs_Monitor() {
 }
 
 Ticker ISR_Display_Update_Controller(ISR_Display_Update, 100, 0, MILLIS);
-Ticker ISR_Cloud_Communication(ISR_Server_Update, 5000, 0, MILLIS);
+Ticker ISR_Cloud_Communication_Controller(ISR_Cloud_Communication, 5000, 0, MILLIS);
 Ticker ISR_Hardware_Inputs_Monitor_Controller(ISR_Hardware_Inputs_Monitor, 1000, 0, MILLIS);
 
 void setup() {
@@ -142,6 +160,7 @@ void setup() {
     WiFi_Init();
 
     Firebase_Init();
+
     Check_and_Fix_Fields_in_RTDB();
 
     //  Checks_OTA_Firmware_Update();
@@ -151,93 +170,108 @@ void setup() {
     OLED_Print_Loading_Screen();
 
     ISR_Display_Update_Controller.start();
-    ISR_Cloud_Communication.start();
+    ISR_Cloud_Communication_Controller.start();
     ISR_Hardware_Inputs_Monitor_Controller.start();
 }
 
 void loop() {
 
     ISR_Display_Update_Controller.update();
-    ISR_Cloud_Communication.update();
+    ISR_Cloud_Communication_Controller.update();
     ISR_Hardware_Inputs_Monitor_Controller.update();
 
     Its_Time_Do();
 
-    Wait_Task_Finish_and_Calc_Duration();
+    Wait_Task_Finish();
 }
 
 void Its_Time_Do() {
 
-    if (isValid_Time(Next_Task)) {
+    int hour = Next_Task.substring(0, Next_Task.indexOf(":")).toInt();
+    int min = Next_Task.substring(Next_Task.indexOf(":") + 1).toInt();
+    int sec = 0;
 
-        int hour = Next_Task.substring(0, Next_Task.indexOf(":")).toInt();
-        int min = Next_Task.substring(Next_Task.indexOf(":") + 1).toInt();
-        int sec = 0;
+    int day = Current_Date(JUST_DAY).toInt();
+    int month = Current_Date(JUST_MONTH).toInt();
+    int year = Current_Date(JUST_YEAR).toInt();
 
-        int day = Current_Date(JUST_DAY).toInt();
-        int month = Current_Date(JUST_MONTH).toInt();
-        int year = Current_Date(JUST_YEAR).toInt();
+    uint32_t current_timestamp = 0;
 
-        uint32_t schedule_timestamp = 0, current_timestamp = 0;
+    current_timestamp = unix_time_in_seconds(Current_Clock(JUST_HOUR).toInt(), Current_Clock(JUST_MIN).toInt(), sec, day, month, year);
+
+    if (isValid_Time(Next_Task) != "-1") {
+
+        uint32_t schedule_timestamp = 0;
 
         schedule_timestamp = unix_time_in_seconds(hour, min, sec, day, month, year);
-        current_timestamp = unix_time_in_seconds(Current_Clock(JUST_HOUR).toInt(), Current_Clock(JUST_MIN).toInt(), sec, day, month, year);
 
         if (((current_timestamp >= schedule_timestamp) && (current_timestamp <= (schedule_timestamp + 120))) && !Washing_Machine.last_power_state) {
-
-            Washing_Machine.task_initial_time = Current_Clock(WITHOUT_SECONDS);
-            Washing_Machine.task_initial_date = Current_Date(FULL);
-
-            digitalWrite(RELAY, HIGH);
-            delay(300);
-            digitalWrite(RELAY, LOW);
-
-            while (!Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED)) {
-                Washing_Machine.starting = true;
-                ISR_Display_Update_Controller.update();
-                ISR_Cloud_Communication.update();
-                ISR_Hardware_Inputs_Monitor_Controller.update();
-                Serial.println("Waiting LED power on...");
-                delay(500);
-            }
-            Washing_Machine.starting = false;
-            Serial.print("task_initial_time: ");
-            Serial.println(Washing_Machine.task_initial_time);
-
-            Washing_Machine.last_power_state = true;
-            Task_Initial_Timestamp = current_timestamp;
+            Start_Washing_Machine(current_timestamp);
         }
+    }
+
+    if (!Washing_Machine.last_power_state && Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED)) {
+        local_start = true;
+        Start_Washing_Machine(current_timestamp);
     }
 }
 
-void Wait_Task_Finish_and_Calc_Duration() {
+void Start_Washing_Machine(uint32_t init_timestamp) {
+    Washing_Machine.task_initial_time = Current_Clock(WITHOUT_SECONDS);
+    Washing_Machine.task_initial_date = Current_Date(FULL);
+
+    digitalWrite(RELAY, HIGH);
+    delay(300);
+    digitalWrite(RELAY, LOW);
+
+    while (!Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED)) {
+        Washing_Machine.starting = true;
+        ISR_Display_Update_Controller.update();
+        ISR_Cloud_Communication_Controller.update();
+        ISR_Hardware_Inputs_Monitor_Controller.update();
+        Serial.println("Waiting LED power on...");
+        delay(500);
+    }
+
+    Washing_Machine.starting = false;
+    Serial.print("task_initial_time: ");
+    Serial.println(Washing_Machine.task_initial_time);
+
+    Washing_Machine.last_power_state = true;
+    Task_Initial_Timestamp = init_timestamp;
+}
+
+void Wait_Task_Finish() {
 
     if (Washing_Machine.last_power_state && !Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED)) {
 
-        Serial.println("F!");
         Washing_Machine.task_finished_time = Current_Clock(WITHOUT_SECONDS);
         Washing_Machine.task_finished_date = Current_Date(FULL);
 
         Serial.print("task_finished_time: ");
         Serial.println(Washing_Machine.task_finished_time);
 
-        uint32_t Task_Delta_Timestamp = 0, Task_Finished_Timestamp = 0;
+        Washing_Machine.task_duration = Task_Duration_Calc(Task_Initial_Timestamp, unix_time_in_seconds(Current_Clock(JUST_HOUR).toInt(), Current_Clock(JUST_MIN).toInt(), 0, Current_Date(JUST_DAY).toInt(), Current_Date(JUST_MONTH).toInt(), Current_Date(JUST_YEAR).toInt()));
 
-        Task_Finished_Timestamp = unix_time_in_seconds(Current_Clock(JUST_HOUR).toInt(), Current_Clock(JUST_MIN).toInt(), 0, Current_Date(JUST_DAY).toInt(), Current_Date(JUST_MONTH).toInt(), Current_Date(JUST_YEAR).toInt());
-
-        Task_Delta_Timestamp = Task_Finished_Timestamp - Task_Initial_Timestamp; // get delta in secs.
-        Task_Delta_Timestamp /= 60;                                              // converts delta from secs to mins.
-        int h = Task_Delta_Timestamp / 60;                                       // converts delta from mins to hours and store only hours number and discarts (truncates) minutes.
-        int m = ((Task_Delta_Timestamp / 60.0) - h) * 60;                        // get only minutes from delta (in hours format) and convert this to minutes format.
-
-        char Task_Duration[10];
-
-        sprintf(Task_Duration, "%02dh%02dmin", h, m);
-
-        Washing_Machine.task_duration = Task_Duration;
+        Serial.print("Task_Duration: ");
+        Serial.println(Washing_Machine.task_duration);
 
         Washing_Machine.last_power_state = false;
 
         Washing_Machine.task_finished = true;
     }
+}
+
+String Task_Duration_Calc(uint32_t init_timestamp, uint32_t end_timestamp) {
+
+    uint32_t Task_Delta_Timestamp = end_timestamp - init_timestamp; // get delta in secs.
+    Task_Delta_Timestamp /= 60;                                     // converts delta from secs to mins.
+    int h = Task_Delta_Timestamp / 60;                              // converts delta from mins to hours and store only hours number and discarts (truncates) minutes.
+    int m = ((Task_Delta_Timestamp / 60.0) - h) * 60;               // get only minutes from delta (in hours format) and convert this to minutes format.
+
+    char Task_Duration[10];
+
+    sprintf(Task_Duration, "%02dh%02dmin", h, m);
+
+    return String(Task_Duration);
 }

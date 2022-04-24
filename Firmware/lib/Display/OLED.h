@@ -23,5 +23,7 @@ String Schedule_Clock();
 void OLED_Print_Loading_Screen();
 void Clear_Active_Tasks();
 void OLED_Print();
+void OLED_Build_Working_Screen(String current_duration, String Firmware_Version);
+void OLED_Print_Current_Task_Duration(String value);
 
 #endif // OLED_H

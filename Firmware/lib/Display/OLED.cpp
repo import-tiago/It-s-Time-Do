@@ -54,6 +54,12 @@ void OLED_Print_Clock(String clock) {
     display.println(clock);
 }
 
+void OLED_Print_Current_Task_Duration(String value) {
+    display.setTextSize(2);
+    display.setCursor(15, 27);
+    display.println(value);
+}
+
 void OLED_Print_Schedule(String from_cloud) {
     display.setTextSize(1);
     display.setCursor(2, 50);
@@ -122,6 +128,24 @@ void OLED_Build_Home_Screen(String _Schedule_Time, String Firmware_Version) {
         OLED_Print_Calendar(Current_Date(FULL));
         OLED_Print_Clock(Current_Clock(PRINT_SECONDS));
         OLED_Print_Schedule(_Schedule_Time);
+    } else {
+        display.setTextSize(2);
+        display.setCursor(15, 25);
+        display.print("RTC FAIL");
+    }
+}
+
+void OLED_Build_Working_Screen(String current_duration, String Firmware_Version) {
+
+    if (RTC_Status()) {
+        OLED_Print_Firmware_Version(Firmware_Version);
+        display.setTextSize(1);
+        display.setCursor(30, 12);
+        display.println("  DURATION");
+        OLED_Print_Current_Task_Duration(current_duration);
+        display.setTextSize(1);
+        display.setCursor(2, 50);
+        display.print("      WORKING...");
     } else {
         display.setTextSize(2);
         display.setCursor(15, 25);
