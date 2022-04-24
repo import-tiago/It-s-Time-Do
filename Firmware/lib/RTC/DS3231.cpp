@@ -19,7 +19,8 @@ void RTC_Init() {
         RTC_Init_Fail = false;
 
     // if (RTC.lostPower())
-    //     RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    //    RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    //  RTC.adjust(DateTime(2022, 4, 24, 20, 7, 0));
 }
 
 bool RTC_Status() {

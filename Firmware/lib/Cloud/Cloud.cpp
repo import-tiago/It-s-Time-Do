@@ -7,6 +7,7 @@
 // Provide the token generation process info.
 #include <addons/TokenHelper.h>
 // Provide the RTDB payload printing info and other helper functions.
+#include <Firebase_ESP_Client.h>
 #include <addons/RTDBHelper.h>
 
 String isValid_Time(String time) {
@@ -28,48 +29,6 @@ String isValid_Time(String time) {
     return time;
 }
 
-String Get_Firebase_String_from(char *Database_Path) {
-
-    String result = "-1";
-
-    if (Firebase.ready()) {
-
-        if (Firebase.RTDB.getString(&fbdo2, Database_Path))
-            result = fbdo2.stringData();
-        else
-            result = fbdo.errorReason();
-    }
-
-    return result;
-}
-
-bool Get_Firebase_Bool_from(char *Database_Path) {
-
-    bool result = 0;
-
-    if (Firebase.ready()) {
-        if (Firebase.RTDB.getBool(&fbdo, Database_Path))
-            result = fbdo.boolData();
-    }
-
-    return result;
-}
-/*
-void Set_Firebase_Bool_at(char *Database_Path, bool data) {
-    if (Firebase.ready())
-        Firebase.RTDB.setBool(&fbdo, Database_Path, data);
-}
-
-bool Set_Firebase_String_at(String Database_Path, String data) {
-    bool response = false;
-
-        if (Firebase.RTDB.setString(&fbdo, Database_Path, data))
-            response = true;
-
-}
-*/
-
-// The Firebase Storage download callback function
 void fcsDownloadCallback(FCS_DownloadStatusInfo info) {
 
     if (info.status == fb_esp_fcs_download_status_init) {
@@ -163,6 +122,8 @@ void Firebase_Init() {
     Firebase.begin(&config, &auth);
 
     Firebase.reconnectWiFi(true);
+
+    Firebase.FCM.setServerKey(FIREBASE_FCM_SERVER_KEY);
 }
 
 bool Set_Firebase_JSON_at(String Database_Path, FirebaseJson json) {

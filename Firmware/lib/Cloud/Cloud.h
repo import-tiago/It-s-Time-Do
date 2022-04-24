@@ -10,7 +10,7 @@ static String Last_Start_Time;
 
 // Define Firebase Data object
 static FirebaseData fbdo;
-static FirebaseData fbdo2;
+//static FirebaseData fbdo2;
 
 static FirebaseAuth auth;
 static FirebaseConfig config;

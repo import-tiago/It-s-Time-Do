@@ -26,6 +26,9 @@ v1.3 - Reading and writing data from/to server changed to JSON method.
 #include "OLED.h"
 #include "WiFi_Secrets.h"
 
+#define TASK_INIT 0
+#define TASK_FINISH 1
+
 struct Washing_Machine_Parameters {
     const String WORKING = "WORKING...";
     const String FREE = "FREE";
@@ -48,6 +51,25 @@ struct Washing_Machine_Parameters {
 
 } Washing_Machine;
 
+struct Task_Initialized_Parameters {
+    String notification_icon_addr = "https://img.icons8.com/external-flaticons-lineal-color-flat-icons/344/external-time-gig-economy-flaticons-lineal-color-flat-icons-2.png";
+    String notification_title = "TASK STARTED";
+    String notification_body = "Your scheduled laundry has just started. You will be notified when it is finished.";
+};
+
+struct Task_Finished_Parameters {
+    String notification_icon_addr = "https://img.icons8.com/external-tal-revivo-green-tal-revivo/344/external-verified-check-circle-for-approved-valid-content-basic-green-tal-revivo.png";
+    String notification_title = "TASK FINISHED";
+    String notification_body = "The washing task just finished!";
+};
+
+struct Notifications {
+    struct Task_Initialized_Parameters init;
+    struct Task_Finished_Parameters end;
+    char Device_Tokens[10][200];
+    uint8_t Number_Registered_Devices = 0;
+} Push_Notification;
+
 uint32_t Task_Initial_Timestamp = 0;
 String Next_Task = "FREE";
 String Start_Field;
@@ -55,11 +77,13 @@ String Start_Field;
 bool local_start = false;
 
 FirebaseJson JSON;
+FirebaseJson JSON_Tokens;
 FirebaseJsonData JSON_Field_Value;
 
 void Its_Time_Do();
 void Wait_Task_Finish();
 String Task_Duration_Calc(uint32_t init_timestamp, uint32_t end_timestamp);
+void Get_List_of_Web_Push_Notifications_Device_Tokens();
 
 void Start_Washing_Machine(uint32_t init_timestamp);
 
@@ -100,7 +124,7 @@ void ISR_Display_Update() {
     OLED_Print();
 }
 
-void ISR_Cloud_Communication() {
+void ISR_Cloud_Communication() { //
 
     JSON.clear();
 
@@ -108,6 +132,8 @@ void ISR_Cloud_Communication() {
 
     fbdo.to<FirebaseJson>().get(JSON_Field_Value, "/START");
     Next_Task = isValid_Time(JSON_Field_Value.to<String>()) != "-1" ? JSON_Field_Value.to<String>() : "FREE";
+
+    Get_List_of_Web_Push_Notifications_Device_Tokens();
 
     JSON.set("/IoT_Device/Calendar", Current_Date(FULL));
     JSON.set("/IoT_Device/Clock", Current_Clock(WITHOUT_SECONDS));
@@ -136,6 +162,8 @@ void ISR_Cloud_Communication() {
 
     Set_Firebase_JSON_at("/", JSON);
 }
+
+void Send_Web_Push_Notification(int8_t type_message);
 
 void ISR_Hardware_Inputs_Monitor() {
     Washing_Machine.current_power_state = Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED);
@@ -211,6 +239,7 @@ void Its_Time_Do() {
     }
 
     if (!Washing_Machine.last_power_state && Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED)) {
+        Send_Web_Push_Notification(TASK_INIT);
         local_start = true;
         Start_Washing_Machine(current_timestamp);
     }
@@ -259,6 +288,8 @@ void Wait_Task_Finish() {
         Washing_Machine.last_power_state = false;
 
         Washing_Machine.task_finished = true;
+
+        Send_Web_Push_Notification(TASK_FINISH);
     }
 }
 
@@ -274,4 +305,61 @@ String Task_Duration_Calc(uint32_t init_timestamp, uint32_t end_timestamp) {
     sprintf(Task_Duration, "%02dh%02dmin", h, m);
 
     return String(Task_Duration);
+}
+
+void Get_List_of_Web_Push_Notifications_Device_Tokens() {
+
+    fbdo.to<FirebaseJson>().get(JSON_Field_Value, "/Notification_Tokens");
+
+    JSON_Field_Value.get<FirebaseJson>(JSON_Tokens);
+
+    size_t count = JSON_Tokens.iteratorBegin();
+
+    Push_Notification.Number_Registered_Devices = count;
+
+    for (size_t i = 0; i < count; i++) {
+        FirebaseJson::IteratorValue value = JSON_Tokens.valueAt(i);
+        sprintf(&Push_Notification.Device_Tokens[i][0], value.key.c_str());
+
+        //   Serial.println(&Push_Notification.Device_Tokens[i][0]);
+    }
+
+    JSON_Tokens.iteratorEnd(); // required for free the used memory in iteration (node data collection)
+}
+
+void Send_Web_Push_Notification(int8_t type_message) {
+
+    FCM_Legacy_HTTP_Message msg;
+
+    FirebaseJsonArray arr;
+
+    for (size_t i = 0; i < Push_Notification.Number_Registered_Devices; i++) {
+        arr.add(&Push_Notification.Device_Tokens[i][0]);
+        Serial.print("Push Notification Device Token: ");
+        Serial.println(&Push_Notification.Device_Tokens[i][0]);
+    }
+
+    msg.targets.registration_ids = arr.raw();
+
+    msg.options.time_to_live = "1000";
+    msg.options.priority = "high";
+
+    if (type_message == TASK_INIT) {
+        msg.payloads.notification.title = Push_Notification.init.notification_title;
+        msg.payloads.notification.body = Push_Notification.init.notification_body;
+        msg.payloads.notification.icon = Push_Notification.init.notification_icon_addr;
+    } else if (type_message == TASK_FINISH) {
+        msg.payloads.notification.title = Push_Notification.end.notification_title;
+        msg.payloads.notification.body = Push_Notification.end.notification_body;
+        msg.payloads.notification.icon = Push_Notification.end.notification_icon_addr;
+    }
+
+    int8_t abort = 0;
+    while (!Firebase.FCM.send(&fbdo, &msg)) {
+
+        Serial.printf("push message send ok\n%s\n\n", Firebase.FCM.payload(&fbdo).c_str());
+        abort++;
+        if (abort > 5)
+            break;
+    }
 }

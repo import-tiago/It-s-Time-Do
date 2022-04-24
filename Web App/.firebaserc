@@ -1,7 +1,5 @@
 {
   "projects": {
-    "default": "itstimedo-69770",
-    "itstimedo": "itstimedo-69770"
-  },
-  "targets": {}
+    "default": "its-time-do"
+  }
 }
