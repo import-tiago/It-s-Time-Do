@@ -1,4 +1,4 @@
-#define FIRMWARE_VERSION "1.3"
+#define FIRMWARE_VERSION "1.4"
 /*
 v1.0 - Initial release.
 v1.1 - Bug fix in task duration calcs.
@@ -8,6 +8,9 @@ v1.3 - Reading and writing data from/to server changed to JSON method.
      - New data struct standard defined to store data in the real time database.
      - Print current task duration while waits the task finish.
      - Allows task duration monitor/log works from local or remote START trigger.
+v1.4 - Enable Checks_OTA_Firmware_Update() on firmware start-up.
+     - Enable Wi-Fi and Firebase connections status print on firmware start-up.
+     - Check firebase ready
 */
 
 /* Native libraries */
@@ -189,9 +192,9 @@ void setup() {
 
     Firebase_Init();
 
-    Check_and_Fix_Fields_in_RTDB();
+    //Check_and_Fix_Fields_in_RTDB();
 
-    //  Checks_OTA_Firmware_Update();
+    Checks_OTA_Firmware_Update();
 
     OLED_Clear();
 

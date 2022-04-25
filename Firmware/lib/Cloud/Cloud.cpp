@@ -98,7 +98,7 @@ void Checks_OTA_Firmware_Update() {
 }
 
 void Firebase_Init() {
-    // Display_Firebase_Connecting();
+    Display_Firebase_Connecting();
     Serial.printf("Firebase Client v%s\n\n", FIREBASE_CLIENT_VERSION);
 
     // Assign the api key (required)
@@ -127,5 +127,6 @@ void Firebase_Init() {
 }
 
 bool Set_Firebase_JSON_at(String Database_Path, FirebaseJson json) {
-    Firebase.RTDB.updateNodeSilent(&fbdo, Database_Path, &json);
+    if (Firebase.ready())
+        Firebase.RTDB.updateNodeSilent(&fbdo, Database_Path, &json);
 }

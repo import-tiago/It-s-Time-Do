@@ -66,12 +66,14 @@ void OLED_Print_Schedule(String from_cloud) {
     display.print("NEXT TASK: ");
     display.print(from_cloud);
 }
+
 void OLED_Print_Loading_Screen() {
     display.setTextSize(2);
     display.setCursor(2, 25);
     display.print("LOADING...");
     display.display();
 }
+
 void OLED_Clear() {
     display.clearDisplay();
 }
