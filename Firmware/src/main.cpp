@@ -10,7 +10,7 @@ v1.3 - Reading and writing data from/to server changed to JSON method.
      - Allows task duration monitor/log works from local or remote START trigger.
 v1.4 - Enable Checks_OTA_Firmware_Update() on firmware start-up.
      - Enable Wi-Fi and Firebase connections status print on firmware start-up.
-     - Check firebase ready
+     - Checks if Firebase is ready before send JSON data to RTDB.
 */
 
 /* Native libraries */
