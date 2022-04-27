@@ -1,4 +1,4 @@
-#define FIRMWARE_VERSION "1.4.1"
+#define FIRMWARE_VERSION "1.5"
 /*
 v1.0   - Initial release.
 v1.1   - Bug fix in task duration calcs.
@@ -16,6 +16,7 @@ v1.4.1 - Bug fix: show working state at /START topic after remote trigger.
        - Send push notification when remote triggers occurs.
        - Calendar postion changed to fit firmware version text.
 v1.4.2 - Bug fix: local trigger does not need trigger relay. Fixed.
+v1.5   - Current firmware version sendind to RTDB.
 */
 
 /* Native libraries */
@@ -148,6 +149,7 @@ void ISR_Cloud_Communication() { //
     JSON.set("/IoT_Device/Calendar", Current_Date(FULL));
     JSON.set("/IoT_Device/Clock", Current_Clock(WITHOUT_SECONDS));
     JSON.set("/IoT_Device/Schedule", (Washing_Machine.starting || Washing_Machine.current_power_state) ? Washing_Machine.WORKING : Next_Task);
+    JSON.set("/IoT_Device/Firmware_Version", FIRMWARE_VERSION);
 
     JSON.set("/Washing_Machine/State", Washing_Machine.current_power_state ? "ON" : "OFF");
 
