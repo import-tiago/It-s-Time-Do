@@ -15,6 +15,7 @@ v1.4.1 - Bug fix: show working state at /START topic after remote trigger.
        - Bug fix: show free state at /START and /IoT_Device topics after task finished.
        - Send push notification when remote triggers occurs.
        - Calendar postion changed to fit firmware version text.
+v1.4.2 - Bug fix: local trigger does not need trigger relay. Fixed.
 */
 
 /* Native libraries */
@@ -35,6 +36,8 @@ v1.4.1 - Bug fix: show working state at /START topic after remote trigger.
 
 #define TASK_INIT 0
 #define TASK_FINISH 1
+#define REMOTE_TRIGGER 1
+#define LOCAL_TRIGGER 1
 
 struct Washing_Machine_Parameters {
     const String WORKING = "WORKING...";
@@ -92,7 +95,7 @@ void Wait_Task_Finish();
 String Task_Duration_Calc(uint32_t init_timestamp, uint32_t end_timestamp);
 void Get_List_of_Web_Push_Notifications_Device_Tokens();
 
-void Start_Washing_Machine(uint32_t init_timestamp);
+void Start_Washing_Machine(uint32_t init_timestamp, int8_t trigger_from);
 
 void Check_and_Fix_Fields_in_RTDB() {
 
@@ -166,8 +169,8 @@ void ISR_Cloud_Communication() { //
         siprintf(path, "/Washing_Machine/Last_Task/%s/%s/Duration", Washing_Machine.task_initial_date, Washing_Machine.task_initial_time.c_str());
         JSON.set(path, Washing_Machine.task_duration);
 
-         JSON.set("/START", Washing_Machine.FREE);
-         JSON.set("/IoT_Device/Schedule", Washing_Machine.FREE);
+        JSON.set("/START", Washing_Machine.FREE);
+        JSON.set("/IoT_Device/Schedule", Washing_Machine.FREE);
     }
 
     Set_Firebase_JSON_at("/", JSON);
@@ -199,7 +202,7 @@ void setup() {
 
     Firebase_Init();
 
-   // Check_and_Fix_Fields_in_RTDB();
+    // Check_and_Fix_Fields_in_RTDB();
 
     Checks_OTA_Firmware_Update();
 
@@ -245,24 +248,26 @@ void Its_Time_Do() {
 
         if (((current_timestamp >= schedule_timestamp) && (current_timestamp <= (schedule_timestamp + 120))) && !Washing_Machine.last_power_state) {
             Send_Web_Push_Notification(TASK_INIT);
-            Start_Washing_Machine(current_timestamp);
+            Start_Washing_Machine(current_timestamp, REMOTE_TRIGGER);
         }
     }
 
     if (!Washing_Machine.last_power_state && Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED)) {
         Send_Web_Push_Notification(TASK_INIT);
         local_start = true;
-        Start_Washing_Machine(current_timestamp);
+        Start_Washing_Machine(current_timestamp, LOCAL_TRIGGER);
     }
 }
 
-void Start_Washing_Machine(uint32_t init_timestamp) {
+void Start_Washing_Machine(uint32_t init_timestamp, int8_t trigger_from) {
     Washing_Machine.task_initial_time = Current_Clock(WITHOUT_SECONDS);
     Washing_Machine.task_initial_date = Current_Date(FULL);
 
-    digitalWrite(RELAY, HIGH);
-    delay(300);
-    digitalWrite(RELAY, LOW);
+    if (trigger_from == REMOTE_TRIGGER) {
+        digitalWrite(RELAY, HIGH);
+        delay(300);
+        digitalWrite(RELAY, LOW);
+    }
 
     while (!Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED)) {
         Washing_Machine.starting = true;
