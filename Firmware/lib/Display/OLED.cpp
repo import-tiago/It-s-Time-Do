@@ -44,7 +44,7 @@ void Display_Check_OTA_Firmware_Update() {
 void OLED_Print_Calendar(String calendar) {
 
     display.setTextSize(1);
-    display.setCursor(32, 5);
+    display.setCursor(40, 5);
     display.println(calendar);
 }
 

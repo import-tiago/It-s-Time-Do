@@ -1,16 +1,20 @@
-#define FIRMWARE_VERSION "1.4"
+#define FIRMWARE_VERSION "1.4.1"
 /*
-v1.0 - Initial release.
-v1.1 - Bug fix in task duration calcs.
-v1.2 - Update library 'Firebase-ESP32' from  v3.1.5 to v3.2.0.
-v1.3 - Reading and writing data from/to server changed to JSON method.
-     - More information besides 'task duration' added to the finished task log.
-     - New data struct standard defined to store data in the real time database.
-     - Print current task duration while waits the task finish.
-     - Allows task duration monitor/log works from local or remote START trigger.
-v1.4 - Enable Checks_OTA_Firmware_Update() on firmware start-up.
-     - Enable Wi-Fi and Firebase connections status print on firmware start-up.
-     - Checks if Firebase is ready before send JSON data to RTDB.
+v1.0   - Initial release.
+v1.1   - Bug fix in task duration calcs.
+v1.2   - Update library 'Firebase-ESP32' from  v3.1.5 to v3.2.0.
+v1.3   - Reading and writing data from/to server changed to JSON method.
+       - More information besides 'task duration' added to the finished task log.
+       - New data struct standard defined to store data in the real time database.
+       - Print current task duration while waits the task finish.
+       - Allows task duration monitor/log works from local or remote START trigger.
+v1.4   - Enable Checks_OTA_Firmware_Update() on firmware start-up.
+       - Enable Wi-Fi and Firebase connections status print on firmware start-up.
+       - Checks if Firebase is ready before send JSON data to RTDB.
+v1.4.1 - Bug fix: show working state at /START topic after remote trigger.
+       - Bug fix: show free state at /START and /IoT_Device topics after task finished.
+       - Send push notification when remote triggers occurs.
+       - Calendar postion changed to fit firmware version text.
 */
 
 /* Native libraries */
@@ -104,7 +108,7 @@ void Check_and_Fix_Fields_in_RTDB() {
 
 bool Get_Washing_Machine_Power_State(int pin) {
 
-    const uint16_t SAMPLES = 255;
+    const uint16_t SAMPLES = 512;
     uint32_t mean = 0;
 
     for (uint16_t i = 0; i < SAMPLES; i++)
@@ -144,7 +148,7 @@ void ISR_Cloud_Communication() { //
 
     JSON.set("/Washing_Machine/State", Washing_Machine.current_power_state ? "ON" : "OFF");
 
-    if (isValid_Time(Next_Task) == "-1" || Washing_Machine.starting || local_start) {
+    if (isValid_Time(Next_Task) == "-1" || Washing_Machine.starting || local_start || Washing_Machine.current_power_state) {
         local_start = false;
         JSON.set("/START", (Washing_Machine.starting || Washing_Machine.current_power_state) ? Washing_Machine.WORKING : Washing_Machine.FREE);
     }
@@ -161,6 +165,9 @@ void ISR_Cloud_Communication() { //
 
         siprintf(path, "/Washing_Machine/Last_Task/%s/%s/Duration", Washing_Machine.task_initial_date, Washing_Machine.task_initial_time.c_str());
         JSON.set(path, Washing_Machine.task_duration);
+
+         JSON.set("/START", Washing_Machine.FREE);
+         JSON.set("/IoT_Device/Schedule", Washing_Machine.FREE);
     }
 
     Set_Firebase_JSON_at("/", JSON);
@@ -192,7 +199,7 @@ void setup() {
 
     Firebase_Init();
 
-    //Check_and_Fix_Fields_in_RTDB();
+   // Check_and_Fix_Fields_in_RTDB();
 
     Checks_OTA_Firmware_Update();
 
@@ -237,6 +244,7 @@ void Its_Time_Do() {
         schedule_timestamp = unix_time_in_seconds(hour, min, sec, day, month, year);
 
         if (((current_timestamp >= schedule_timestamp) && (current_timestamp <= (schedule_timestamp + 120))) && !Washing_Machine.last_power_state) {
+            Send_Web_Push_Notification(TASK_INIT);
             Start_Washing_Machine(current_timestamp);
         }
     }
