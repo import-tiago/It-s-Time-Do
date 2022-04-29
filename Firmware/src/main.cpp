@@ -1,4 +1,4 @@
-#define FIRMWARE_VERSION "1.5"
+#define FIRMWARE_VERSION "1.5.1"
 /*
 v1.0   - Initial release.
 v1.1   - Bug fix in task duration calcs.
@@ -37,8 +37,12 @@ v1.5   - Current firmware version sendind to RTDB.
 
 #define TASK_INIT 0
 #define TASK_FINISH 1
+#define TASK_FAIL 2
 #define REMOTE_TRIGGER 1
 #define LOCAL_TRIGGER 1
+
+#define LOCAL_TRIGGER_LATENCY_TIME 30
+bool latency_by_local_trigger = false;
 
 struct Washing_Machine_Parameters {
     const String WORKING = "WORKING...";
@@ -74,9 +78,16 @@ struct Task_Finished_Parameters {
     String notification_body = "The washing task just finished!";
 };
 
+struct Task_Fail_Parameters {
+    String notification_icon_addr = "https://img.icons8.com/dusk/344/cancel.png";
+    String notification_title = "TASK FAIL";
+    String notification_body = "Unfortunately the task has not been started.";
+};
+
 struct Notifications {
     struct Task_Initialized_Parameters init;
     struct Task_Finished_Parameters end;
+    struct Task_Fail_Parameters fail;
     char Device_Tokens[10][200];
     uint8_t Number_Registered_Devices = 0;
 } Push_Notification;
@@ -84,6 +95,8 @@ struct Notifications {
 uint32_t Task_Initial_Timestamp = 0;
 String Next_Task = "FREE";
 String Start_Field;
+uint8_t Task_Fail_Monitor = 0;
+#define TASK_FAIL_TIMEOUT 20
 
 bool local_start = false;
 
@@ -97,18 +110,6 @@ String Task_Duration_Calc(uint32_t init_timestamp, uint32_t end_timestamp);
 void Get_List_of_Web_Push_Notifications_Device_Tokens();
 
 void Start_Washing_Machine(uint32_t init_timestamp, int8_t trigger_from);
-
-void Check_and_Fix_Fields_in_RTDB() {
-
-    Firebase.RTDB.getJSON(&fbdo, "/");
-    fbdo.to<FirebaseJson>().get(JSON_Field_Value, "/START");
-
-    if (!JSON_Field_Value.success) {
-        JSON.add("START", Washing_Machine.FREE);
-        Set_Firebase_JSON_at("/", JSON);
-        JSON.clear();
-    }
-}
 
 bool Get_Washing_Machine_Power_State(int pin) {
 
@@ -135,7 +136,7 @@ void ISR_Display_Update() {
     OLED_Print();
 }
 
-void ISR_Cloud_Communication() { //
+void ISR_Cloud_Communication() {
 
     JSON.clear();
 
@@ -175,13 +176,18 @@ void ISR_Cloud_Communication() { //
         JSON.set("/IoT_Device/Schedule", Washing_Machine.FREE);
     }
 
-    Set_Firebase_JSON_at("/", JSON);
+    Serial.print("Set_Firebase_JSON: ");
+    Serial.println(Set_Firebase_JSON_at("/", JSON));
 }
 
 void Send_Web_Push_Notification(int8_t type_message);
 
 void ISR_Hardware_Inputs_Monitor() {
     Washing_Machine.current_power_state = Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED);
+
+    latency_by_local_trigger++;
+    if (latency_by_local_trigger >= LOCAL_TRIGGER_LATENCY_TIME)
+        latency_by_local_trigger = false;
 }
 
 Ticker ISR_Display_Update_Controller(ISR_Display_Update, 100, 0, MILLIS);
@@ -203,8 +209,6 @@ void setup() {
     WiFi_Init();
 
     Firebase_Init();
-
-    // Check_and_Fix_Fields_in_RTDB();
 
     Checks_OTA_Firmware_Update();
 
@@ -269,7 +273,10 @@ void Start_Washing_Machine(uint32_t init_timestamp, int8_t trigger_from) {
         digitalWrite(RELAY, HIGH);
         delay(300);
         digitalWrite(RELAY, LOW);
-    }
+    } else
+        latency_by_local_trigger = true;
+
+    bool fail = false;
 
     while (!Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED)) {
         Washing_Machine.starting = true;
@@ -278,36 +285,50 @@ void Start_Washing_Machine(uint32_t init_timestamp, int8_t trigger_from) {
         ISR_Hardware_Inputs_Monitor_Controller.update();
         Serial.println("Waiting LED power on...");
         delay(500);
+        Task_Fail_Monitor++;
+        if (Task_Fail_Monitor >= TASK_FAIL_TIMEOUT) {
+            Washing_Machine.starting = false;
+            fail = true;
+            Task_Fail_Monitor = 0;
+            Send_Web_Push_Notification(TASK_FAIL);
+            Washing_Machine.last_power_state = false;
+            Washing_Machine.task_finished = true;
+            break;
+        }
     }
 
-    Washing_Machine.starting = false;
-    Serial.print("task_initial_time: ");
-    Serial.println(Washing_Machine.task_initial_time);
+    if (!fail) {
+        Washing_Machine.starting = false;
+        Serial.print("task_initial_time: ");
+        Serial.println(Washing_Machine.task_initial_time);
 
-    Washing_Machine.last_power_state = true;
-    Task_Initial_Timestamp = init_timestamp;
+        Washing_Machine.last_power_state = true;
+        Task_Initial_Timestamp = init_timestamp;
+    }
 }
 
 void Wait_Task_Finish() {
 
-    if (Washing_Machine.last_power_state && !Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED)) {
+    if (latency_by_local_trigger == false) {
+        if (Washing_Machine.last_power_state && !Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED)) {
 
-        Washing_Machine.task_finished_time = Current_Clock(WITHOUT_SECONDS);
-        Washing_Machine.task_finished_date = Current_Date(FULL);
+            Washing_Machine.task_finished_time = Current_Clock(WITHOUT_SECONDS);
+            Washing_Machine.task_finished_date = Current_Date(FULL);
 
-        Serial.print("task_finished_time: ");
-        Serial.println(Washing_Machine.task_finished_time);
+            Serial.print("task_finished_time: ");
+            Serial.println(Washing_Machine.task_finished_time);
 
-        Washing_Machine.task_duration = Task_Duration_Calc(Task_Initial_Timestamp, unix_time_in_seconds(Current_Clock(JUST_HOUR).toInt(), Current_Clock(JUST_MIN).toInt(), 0, Current_Date(JUST_DAY).toInt(), Current_Date(JUST_MONTH).toInt(), Current_Date(JUST_YEAR).toInt()));
+            Washing_Machine.task_duration = Task_Duration_Calc(Task_Initial_Timestamp, unix_time_in_seconds(Current_Clock(JUST_HOUR).toInt(), Current_Clock(JUST_MIN).toInt(), 0, Current_Date(JUST_DAY).toInt(), Current_Date(JUST_MONTH).toInt(), Current_Date(JUST_YEAR).toInt()));
 
-        Serial.print("Task_Duration: ");
-        Serial.println(Washing_Machine.task_duration);
+            Serial.print("Task_Duration: ");
+            Serial.println(Washing_Machine.task_duration);
 
-        Washing_Machine.last_power_state = false;
+            Washing_Machine.last_power_state = false;
 
-        Washing_Machine.task_finished = true;
+            Washing_Machine.task_finished = true;
 
-        Send_Web_Push_Notification(TASK_FINISH);
+            Send_Web_Push_Notification(TASK_FINISH);
+        }
     }
 }
 
@@ -338,8 +359,6 @@ void Get_List_of_Web_Push_Notifications_Device_Tokens() {
     for (size_t i = 0; i < count; i++) {
         FirebaseJson::IteratorValue value = JSON_Tokens.valueAt(i);
         sprintf(&Push_Notification.Device_Tokens[i][0], value.key.c_str());
-
-        //   Serial.println(&Push_Notification.Device_Tokens[i][0]);
     }
 
     JSON_Tokens.iteratorEnd(); // required for free the used memory in iteration (node data collection)
@@ -370,6 +389,10 @@ void Send_Web_Push_Notification(int8_t type_message) {
         msg.payloads.notification.title = Push_Notification.end.notification_title;
         msg.payloads.notification.body = Push_Notification.end.notification_body;
         msg.payloads.notification.icon = Push_Notification.end.notification_icon_addr;
+    } else if (type_message == TASK_FAIL) {
+        msg.payloads.notification.title = Push_Notification.fail.notification_title;
+        msg.payloads.notification.body = Push_Notification.fail.notification_body;
+        msg.payloads.notification.icon = Push_Notification.fail.notification_icon_addr;
     }
 
     int8_t abort = 0;

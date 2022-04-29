@@ -117,7 +117,7 @@ void Firebase_Init() {
     // Assign download buffer size in byte
     // Data to be downloaded will read as multiple chunks with this size, to compromise between speed and memory used for buffering.
     // The memory from external SRAM/PSRAM will not use in the TCP client internal rx buffer.
-    config.fcs.download_buffer_size = 2048;
+    config.fcs.download_buffer_size = 4096;
 
     Firebase.begin(&config, &auth);
 
@@ -128,5 +128,5 @@ void Firebase_Init() {
 
 bool Set_Firebase_JSON_at(String Database_Path, FirebaseJson json) {
     if (Firebase.ready())
-        Firebase.RTDB.updateNodeSilent(&fbdo, Database_Path, &json);
+       return (Firebase.RTDB.updateNodeSilent(&fbdo, Database_Path, &json));
 }
