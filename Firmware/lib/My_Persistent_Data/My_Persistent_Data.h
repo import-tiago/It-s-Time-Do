@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include <TridentTD_ESP32NVS.h>
 
-static char Current_Firmware_Version[100] = {'\0'};
+
 
 // PROTOTYPES
 void Flash_Memory_Init();

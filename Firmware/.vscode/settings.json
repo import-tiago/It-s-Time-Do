@@ -17,5 +17,6 @@
         "system_error": "cpp",
         "tuple": "cpp",
         "algorithm": "cpp"
-    }
+    },
+    "C_Cpp.vcFormat.indent.caseLabels": true
 }
