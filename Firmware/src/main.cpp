@@ -1,34 +1,27 @@
 #define FIRMWARE_VERSION "1.6"
 /*
-v1.0   - Initial release.
-v1.1   - Bug fix in task duration calcs.
-v1.2   - Update library 'Firebase-ESP32' from  v3.1.5 to v3.2.0.
-v1.3   - Reading and writing data from/to server changed to JSON method.
-		- More information besides 'task duration' added to the finished task
-log.
-		- New data struct standard defined to store data in the real time
-database.
+v1.0    - Initial release.
+v1.1    - Bug fix in task duration calcs.
+v1.2    - Update library 'Firebase-ESP32' from  v3.1.5 to v3.2.0.
+v1.3    - Reading and writing data from/to server changed to JSON method.
+		- More information besides 'task duration' added to the finished task log.
+		- New data struct standard defined to store data in the real time database.
 		- Print current task duration while waits the task finish.
-		- Allows task duration monitor/log works from local or remote START
-trigger. v1.4   - Enable Checks_OTA_Firmware_Update() on firmware start-up.
-		- Enable Wi-Fi and Firebase connections status print on firmware
-start-up.
+		- Allows task duration monitor/log works from local or remote START trigger.
+v1.4    - Enable Checks_OTA_Firmware_Update() on firmware start-up.
+		- Enable Wi-Fi and Firebase connections status print on firmware start-up.
 		- Checks if Firebase is ready before send JSON data to RTDB.
-v1.4.1 - Bug fix: show working state at /START topic after remote trigger.
-		- Bug fix: show free state at /START and /IoT_Device topics after task
-finished.
+v1.4.1  - Bug fix: show working state at /START topic after remote trigger.
+		- Bug fix: show free state at /START and /IoT_Device topics after task finished.
 		- Send push notification when remote triggers occurs.
 		- Calendar postion changed to fit firmware version text.
-v1.4.2 - Bug fix: local trigger does not need trigger relay. Fixed.
-v1.5   - Current firmware version sendind to RTDB.
-v1.6   - New firmware structure based on state finite machine, no more just ISR.
+v1.4.2  - Bug fix: local trigger does not need trigger relay. Fixed.
+v1.5    - Current firmware version sendind to RTDB.
+v1.6    - New firmware structure based on finite state machine, no more just ISR.
 */
 
 /* Native libraries */
 #include <Arduino.h>
-
-/* External libraries */
-#include <Ticker.h>
 
 /* Own libraries */
 #include "Board_Pins.h"
@@ -40,9 +33,6 @@ v1.6   - New firmware structure based on state finite machine, no more just ISR.
 #include "OLED.h"
 #include "WiFi_Secrets.h"
 
-portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
-
-// STATE FINITE MACHINE
 typedef enum {
 
 	STARTING = 0,
@@ -61,107 +51,20 @@ typedef enum {
 
 	DISPLAY_UPDATE
 
-} StatesFSM1;
+} SystemStates;
 
-StatesFSM1 stateFSM1 = STARTING;
+SystemStates Current_System_State = STARTING;
 
-void runFSM();
-void Change_State_of_Machine_to(StatesFSM1 New_State);
-
-hw_timer_t* Hardware_ISR_Timer = NULL;
-
-
-struct Washing_Machine_Parameters {
-	const String WORKING = "WORKING...";
-	const String FREE = "FREE";
-	const String FAIL = "FAIL";
-
-	bool starting = false;
-
-	String washing_mode = "?";
-} Washing_Machine;
-
-struct Notification_Task_Initialized_Parameters {
-	String notification_icon_addr = "https://img.icons8.com/external-flaticons-lineal-color-flat-icons/344/external-time-gig-economy-flaticons-lineal-color-flat-icons-2.png";
-	String notification_title = "TASK STARTED";
-	String notification_body = "Your scheduled laundry has just started. You will be notified when it is finished.";
-	const uint8_t TASK_INIT = 0;
-};
-
-struct Notification_Task_Finished_Parameters {
-	String notification_icon_addr = "https://img.icons8.com/external-tal-revivo-green-tal-revivo/344/external-verified-check-circle-for-approved-valid-content-basic-green-tal-revivo.png";
-	String notification_title = "TASK FINISHED";
-	String notification_body = "The washing task just finished!";
-	const uint8_t TASK_FINISH = 1;
-};
-
-struct Notification_Task_Fail_Parameters {
-	String notification_icon_addr = "https://img.icons8.com/dusk/344/cancel.png";
-	String notification_title = "TASK FAIL";
-	String notification_body = "Unfortunately the task has not been started.";
-	const uint8_t TASK_FAIL = 2;
-};
-
-struct Push_Notifications {
-	struct Notification_Task_Initialized_Parameters init;
-	struct Notification_Task_Finished_Parameters end;
-	struct Notification_Task_Fail_Parameters fail;
-	char Device_Tokens[10][200];
-	uint8_t Number_Registered_Devices = 0;
-} Push_Notification;
-
-
-struct Task_Parameters {
-	bool running = false;
-	bool done = false;
-
-	String initial_time;
-	String initial_date;
-	uint32_t initial_timestamp;
-
-	String finished_time;
-	String finished_date;
-
-	String duration;
-} Task;
-
-String Next_Task = "FREE";
-String Start_Field;
-
-#define TASK_FAIL_TIMEOUT 20
-
-bool local_start = false;
-
-FirebaseJson JSON;
-FirebaseJson JSON_Tokens;
-FirebaseJsonData JSON_Result;
-
-void Its_Time_Do();
-void Wait_Task_Finish();
-String Task_Duration_Calc(uint32_t init_timestamp, uint32_t end_timestamp);
-void Extract_List_of_Web_Push_Notifications_Device_Tokens();
+void System_States_Manager();
+void System_State_Modify(SystemStates New_State);
 
 void Start_Washing_Machine();
+bool Get_Washing_Machine_Power_State(int pin);
 
-bool Get_Washing_Machine_Power_State(int pin) {
-
-	const uint16_t SAMPLES = 255;
-	uint32_t mean = 0;
-
-	for (uint16_t i = 0; i < SAMPLES; i++)
-		mean += analogRead(pin);
-
-	mean /= SAMPLES;
-
-	return (mean >= 220) ? true : false; // 220 in AD value  is ~0.7V (minimum drop voltage in a diode/LED)
-}
-
-void Send_Web_Push_Notification(int8_t type_message);
 void Get_Task_Initialization_Parameters();
 void Get_Task_Finalization_Parameters();
 bool Wait_Washing_Machine_Start();
-
-
+String Task_Duration_Calc(uint32_t init_timestamp, uint32_t end_timestamp);
 
 void setup() {
 
@@ -187,16 +90,16 @@ void setup() {
 }
 
 void loop() {
-	runFSM();
+	System_States_Manager();
 }
 
-void runFSM() {
+void System_States_Manager() {
 
-	switch (stateFSM1) {
+	switch (Current_System_State) {
 
 		case STARTING: {
 
-				Change_State_of_Machine_to(DISPLAY_UPDATE);
+				System_State_Modify(DISPLAY_UPDATE);
 				break;
 			}
 
@@ -211,7 +114,7 @@ void runFSM() {
 
 				OLED_Print();
 
-				Change_State_of_Machine_to(GET_CLOUD_JSON_DATA);
+				System_State_Modify(GET_CLOUD_JSON_DATA);
 				break;
 			}
 
@@ -221,7 +124,7 @@ void runFSM() {
 
 				Firebase.RTDB.getJSON(&fbdo, "/", &JSON);
 
-				Change_State_of_Machine_to(DESERIALIZE_JSON_DATA);
+				System_State_Modify(DESERIALIZE_JSON_DATA);
 
 				break;
 			}
@@ -235,10 +138,10 @@ void runFSM() {
 				if (isValid_Time(JSON_Result.to<String>())) {
 
 					Next_Task = JSON_Result.to<String>();
-					Change_State_of_Machine_to(REMOTE_TRIGGER_MONITOR);
+					System_State_Modify(REMOTE_TRIGGER_MONITOR);
 				}
 				else
-					Change_State_of_Machine_to(LOCAL_TRIGGER_MONITOR);
+					System_State_Modify(LOCAL_TRIGGER_MONITOR);
 
 				break;
 			}
@@ -259,7 +162,7 @@ void runFSM() {
 				if (((current_timestamp >= schedule_timestamp) && (current_timestamp <= (schedule_timestamp + 120))) && !Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED))
 					Start_Washing_Machine();
 				else
-					Change_State_of_Machine_to(LOCAL_TRIGGER_MONITOR);
+					System_State_Modify(LOCAL_TRIGGER_MONITOR);
 
 				break;
 			}
@@ -279,7 +182,7 @@ void runFSM() {
 					Send_Web_Push_Notification(Push_Notification.init.TASK_INIT);
 				}
 
-				Change_State_of_Machine_to(TASK_STATUS_MONITOR);
+				System_State_Modify(TASK_STATUS_MONITOR);
 
 				break;
 			}
@@ -303,7 +206,7 @@ void runFSM() {
 					Send_Web_Push_Notification(Push_Notification.end.TASK_FINISH);
 				}
 
-				Change_State_of_Machine_to(SET_CLOUD_JSON);
+				System_State_Modify(SET_CLOUD_JSON);
 				break;
 			}
 
@@ -341,48 +244,48 @@ void runFSM() {
 
 				Set_Firebase_JSON_at("/", JSON);
 
-				Change_State_of_Machine_to(DISPLAY_UPDATE);
+				System_State_Modify(DISPLAY_UPDATE);
 				break;
 			}
 
 	}
 }
 
-void Change_State_of_Machine_to(StatesFSM1 New_State) {
+void System_State_Modify(SystemStates New_State) {
 
 	switch (New_State) {
 
 		case STARTING:
-			stateFSM1 = STARTING;
+			Current_System_State = STARTING;
 			break;
 
 		case GET_CLOUD_JSON_DATA:
-			stateFSM1 = GET_CLOUD_JSON_DATA;
+			Current_System_State = GET_CLOUD_JSON_DATA;
 			break;
 
 		case DESERIALIZE_JSON_DATA:
-			stateFSM1 = DESERIALIZE_JSON_DATA;
+			Current_System_State = DESERIALIZE_JSON_DATA;
 			break;
 
 		case REMOTE_TRIGGER_MONITOR:
-			stateFSM1 = REMOTE_TRIGGER_MONITOR;
+			Current_System_State = REMOTE_TRIGGER_MONITOR;
 			break;
 
 		case LOCAL_TRIGGER_MONITOR:
-			stateFSM1 = LOCAL_TRIGGER_MONITOR;
+			Current_System_State = LOCAL_TRIGGER_MONITOR;
 			break;
 
 
 		case TASK_STATUS_MONITOR:
-			stateFSM1 = TASK_STATUS_MONITOR;
+			Current_System_State = TASK_STATUS_MONITOR;
 			break;
 
 		case SET_CLOUD_JSON:
-			stateFSM1 = SET_CLOUD_JSON;
+			Current_System_State = SET_CLOUD_JSON;
 			break;
 
 		case DISPLAY_UPDATE:
-			stateFSM1 = DISPLAY_UPDATE;
+			Current_System_State = DISPLAY_UPDATE;
 			break;
 	}
 }
@@ -403,16 +306,19 @@ void Start_Washing_Machine() {
 
 		Send_Web_Push_Notification(Push_Notification.init.TASK_INIT);
 
-		Change_State_of_Machine_to(TASK_STATUS_MONITOR);
+		System_State_Modify(TASK_STATUS_MONITOR);
 	}
 	else
-		Change_State_of_Machine_to(SET_CLOUD_JSON);
+		System_State_Modify(SET_CLOUD_JSON);
 
 }
 
 bool Wait_Washing_Machine_Start() {
+
 	bool fail = false;
 	uint8_t Task_Fail_Monitor = 0;
+	const uint8_t TASK_FAIL_TIMEOUT = 20;
+
 	Washing_Machine.starting = true;
 
 	do {
@@ -436,6 +342,7 @@ bool Wait_Washing_Machine_Start() {
 }
 
 void Get_Task_Initialization_Parameters() {
+
 	Task.initial_time = Current_Clock(WITHOUT_SECONDS);
 	Task.initial_date = Current_Date(FULL);
 
@@ -446,6 +353,7 @@ void Get_Task_Initialization_Parameters() {
 }
 
 void Get_Task_Finalization_Parameters() {
+
 	Task.finished_time = Current_Clock(WITHOUT_SECONDS);
 	Task.finished_date = Current_Date(FULL);
 
@@ -470,63 +378,15 @@ String Task_Duration_Calc(uint32_t init_timestamp, uint32_t end_timestamp) {
 	return String(Task_Duration);
 }
 
-void Extract_List_of_Web_Push_Notifications_Device_Tokens() {
+bool Get_Washing_Machine_Power_State(int pin) {
 
-	fbdo.to<FirebaseJson>().get(JSON_Result, "/Notification_Tokens");
+	const uint16_t SAMPLES = 255;
+	uint32_t mean = 0;
 
-	JSON_Result.get<FirebaseJson>(JSON_Tokens);
+	for (uint16_t i = 0; i < SAMPLES; i++)
+		mean += analogRead(pin);
 
-	size_t count = JSON_Tokens.iteratorBegin();
+	mean /= SAMPLES;
 
-	Push_Notification.Number_Registered_Devices = count;
-
-	for (size_t i = 0; i < count; i++) {
-		FirebaseJson::IteratorValue value = JSON_Tokens.valueAt(i);
-		sprintf(&Push_Notification.Device_Tokens[i][0], value.key.c_str());
-	}
-
-	JSON_Tokens.iteratorEnd(); // required for free the used memory in iteration
-}
-
-void Send_Web_Push_Notification(int8_t type_message) {
-
-	FCM_Legacy_HTTP_Message msg;
-
-	FirebaseJsonArray arr;
-
-	for (size_t i = 0; i < Push_Notification.Number_Registered_Devices; i++) {
-		arr.add(&Push_Notification.Device_Tokens[i][0]);
-		//Serial.print("Push Notification Device Token: ");
-		//Serial.println(&Push_Notification.Device_Tokens[i][0]);
-	}
-
-	msg.targets.registration_ids = arr.raw();
-
-	msg.options.time_to_live = "1000";
-	msg.options.priority = "high";
-
-	if (type_message == Push_Notification.init.TASK_INIT) {
-		msg.payloads.notification.title = Push_Notification.init.notification_title;
-		msg.payloads.notification.body = Push_Notification.init.notification_body;
-		msg.payloads.notification.icon = Push_Notification.init.notification_icon_addr;
-	}
-	else if (type_message == Push_Notification.end.TASK_FINISH) {
-		msg.payloads.notification.title = Push_Notification.end.notification_title;
-		msg.payloads.notification.body = Push_Notification.end.notification_body;
-		msg.payloads.notification.icon = Push_Notification.end.notification_icon_addr;
-	}
-	else if (type_message == Push_Notification.fail.TASK_FAIL) {
-		msg.payloads.notification.title = Push_Notification.fail.notification_title;
-		msg.payloads.notification.body = Push_Notification.fail.notification_body;
-		msg.payloads.notification.icon = Push_Notification.fail.notification_icon_addr;
-	}
-
-	int8_t abort = 0;
-	while (!Firebase.FCM.send(&fbdo, &msg)) {
-
-		//Serial.printf("push message send ok\n%s\n\n", Firebase.FCM.payload(&fbdo).c_str());
-		abort++;
-		if (abort > 5)
-			break;
-	}
+	return (mean >= 220) ? true : false; // 220 in AD value  is ~0.7V (minimum drop voltage in a diode/LED)
 }

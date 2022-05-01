@@ -136,4 +136,62 @@ void Firebase_Init() {
 bool Set_Firebase_JSON_at(String Database_Path, FirebaseJson json) {
 	if (Firebase.ready())
 		return (Firebase.RTDB.updateNodeSilent(&fbdo, Database_Path, &json));
+	else
+		return false;
+}
+
+void Extract_List_of_Web_Push_Notifications_Device_Tokens() {
+
+	fbdo.to<FirebaseJson>().get(JSON_Result, "/Notification_Tokens");
+
+	JSON_Result.get<FirebaseJson>(JSON_Tokens);
+
+	size_t count = JSON_Tokens.iteratorBegin();
+
+	Push_Notification.Number_Registered_Devices = count;
+
+	for (size_t i = 0; i < count; i++) {
+		FirebaseJson::IteratorValue value = JSON_Tokens.valueAt(i);
+		sprintf(&Push_Notification.Device_Tokens[i][0], value.key.c_str());
+	}
+
+	JSON_Tokens.iteratorEnd(); // required for free the used memory in iteration
+}
+
+void Send_Web_Push_Notification(int8_t type_message) {
+
+	FCM_Legacy_HTTP_Message msg;
+
+	FirebaseJsonArray arr;
+
+	for (size_t i = 0; i < Push_Notification.Number_Registered_Devices; i++)
+		arr.add(&Push_Notification.Device_Tokens[i][0]);
+
+	msg.targets.registration_ids = arr.raw();
+
+	msg.options.time_to_live = "1000";
+	msg.options.priority = "high";
+
+	if (type_message == Push_Notification.init.TASK_INIT) {
+		msg.payloads.notification.title = Push_Notification.init.notification_title;
+		msg.payloads.notification.body = Push_Notification.init.notification_body;
+		msg.payloads.notification.icon = Push_Notification.init.notification_icon_addr;
+	}
+	else if (type_message == Push_Notification.end.TASK_FINISH) {
+		msg.payloads.notification.title = Push_Notification.end.notification_title;
+		msg.payloads.notification.body = Push_Notification.end.notification_body;
+		msg.payloads.notification.icon = Push_Notification.end.notification_icon_addr;
+	}
+	else if (type_message == Push_Notification.fail.TASK_FAIL) {
+		msg.payloads.notification.title = Push_Notification.fail.notification_title;
+		msg.payloads.notification.body = Push_Notification.fail.notification_body;
+		msg.payloads.notification.icon = Push_Notification.fail.notification_icon_addr;
+	}
+
+	int8_t abort = 0;
+	while (!Firebase.FCM.send(&fbdo, &msg)) {
+		abort++;
+		if (abort > 5)
+			break;
+	}
 }
