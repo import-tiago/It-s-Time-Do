@@ -30,7 +30,7 @@ struct Washing_Machine_Parameters {
 	const String FREE = "FREE";
 	const String FAIL = "FAIL";
 
-	bool starting = false;
+	bool Initializing = false;
 
 	String washing_mode = "?";
 } static Washing_Machine;

@@ -1,4 +1,4 @@
-#define FIRMWARE_VERSION "1.6"
+#define FIRMWARE_VERSION "1.7"
 /*
 v1.0    - Initial release.
 v1.1    - Bug fix in task duration calcs.
@@ -18,6 +18,8 @@ v1.4.1  - Bug fix: show working state at /START topic after remote trigger.
 v1.4.2  - Bug fix: local trigger does not need trigger relay. Fixed.
 v1.5    - Current firmware version sendind to RTDB.
 v1.6    - New firmware structure based on finite state machine, no more just ISR.
+v1.7  	- Update library 'Firebase-ESP32' from  v3.2.0 to v3.3.0.
+		- Minor improvements in variables/functions names (more intuitive code reading).
 */
 
 /* Native libraries */
@@ -58,12 +60,12 @@ SystemStates Current_System_State = STARTING;
 void System_States_Manager();
 void System_State_Modify(SystemStates New_State);
 
-void Start_Washing_Machine();
+void Remote_Start_Washing_Machine();
 bool Get_Washing_Machine_Power_State(int pin);
 
 void Get_Task_Initialization_Parameters();
 void Get_Task_Finalization_Parameters();
-bool Wait_Washing_Machine_Start();
+bool Wait_Washing_Machine_Initialize();
 String Task_Duration_Calc(uint32_t init_timestamp, uint32_t end_timestamp);
 
 void setup() {
@@ -134,9 +136,10 @@ void System_States_Manager() {
 				Extract_List_of_Web_Push_Notifications_Device_Tokens();
 
 				fbdo.to<FirebaseJson>().get(JSON_Result, "/START");
-				JSON.remove("/START");
-				if (isValid_Time(JSON_Result.to<String>())) {
 
+				JSON.remove("/START");
+
+				if (isValid_Time(JSON_Result.to<String>())) {
 					Next_Task = JSON_Result.to<String>();
 					System_State_Modify(REMOTE_TRIGGER_MONITOR);
 				}
@@ -160,7 +163,7 @@ void System_States_Manager() {
 				uint32_t schedule_timestamp = Get_Timestamp(hour, min, sec, day, month, year);
 
 				if (((current_timestamp >= schedule_timestamp) && (current_timestamp <= (schedule_timestamp + 120))) && !Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED))
-					Start_Washing_Machine();
+					Remote_Start_Washing_Machine();
 				else
 					System_State_Modify(LOCAL_TRIGGER_MONITOR);
 
@@ -290,13 +293,13 @@ void System_State_Modify(SystemStates New_State) {
 	}
 }
 
-void Start_Washing_Machine() {
+void Remote_Start_Washing_Machine() {
 
 	digitalWrite(RELAY, HIGH);
 	delay(300);
 	digitalWrite(RELAY, LOW);
 
-	if (!Wait_Washing_Machine_Start()) {
+	if (!Wait_Washing_Machine_Initialize()) {
 
 		Task.running = true;
 
@@ -313,13 +316,13 @@ void Start_Washing_Machine() {
 
 }
 
-bool Wait_Washing_Machine_Start() {
+bool Wait_Washing_Machine_Initialize() {
 
 	bool fail = false;
 	uint8_t Task_Fail_Monitor = 0;
 	const uint8_t TASK_FAIL_TIMEOUT = 20;
 
-	Washing_Machine.starting = true;
+	Washing_Machine.Initializing = true;
 
 	do {
 		Serial.println("Waiting LED power on...");
@@ -336,7 +339,7 @@ bool Wait_Washing_Machine_Start() {
 		Task_Fail_Monitor++;
 	} while (!Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED) && !fail);
 
-	Washing_Machine.starting = false;
+	Washing_Machine.Initializing = false;
 
 	return fail;
 }
@@ -372,7 +375,7 @@ String Task_Duration_Calc(uint32_t init_timestamp, uint32_t end_timestamp) {
 
 	sprintf(Task_Duration, "%02dh%02dmin", h, m);
 
-	Serial.print("Task_Duration: ");
+	Serial.print("Current Task_Duration: ");
 	Serial.println(Task_Duration);
 
 	return String(Task_Duration);
