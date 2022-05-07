@@ -20,6 +20,7 @@ v1.5    - Current firmware version sendind to RTDB.
 v1.6    - New firmware structure based on finite state machine, no more just ISR.
 v1.7  	- Update library 'Firebase-ESP32' from  v3.2.0 to v3.3.0.
 		- Minor improvements in variables/functions names (more intuitive code reading).
+		- Bug fix in Last_Task fild (data being erased after some time).
 */
 
 /* Native libraries */
@@ -58,8 +59,8 @@ typedef enum {
 SystemStates Current_System_State = STARTING;
 
 void System_States_Manager();
-void System_State_Modify(SystemStates New_State);
 
+void System_State_Modify(SystemStates New_State);
 void Remote_Start_Washing_Machine();
 bool Get_Washing_Machine_Power_State(int pin);
 
@@ -198,7 +199,7 @@ void System_States_Manager() {
 
 					Task.running = false;
 
-					Task.done = true;
+					Task.new_report = true;
 
 					Next_Task = Washing_Machine.FREE;
 
@@ -215,6 +216,8 @@ void System_States_Manager() {
 
 		case SET_CLOUD_JSON: {
 
+				Firebase.RTDB.getJSON(&fbdo, "/", &JSON);
+
 				JSON.set("/IoT_Device/Calendar", Current_Date(FULL));
 				JSON.set("/IoT_Device/Clock", Current_Clock(WITHOUT_SECONDS));
 				JSON.set("/IoT_Device/Schedule", Next_Task);
@@ -222,13 +225,12 @@ void System_States_Manager() {
 
 				JSON.set("/Washing_Machine/State", Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED) ? "ON" : "OFF");
 
-
 				if (Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED))
 					JSON.set("/START", Washing_Machine.WORKING);
 
-				if (Task.done) {
+				if (Task.new_report) {
 
-					Task.done = false;
+					Task.new_report = false;
 					Task.running = false;
 
 					static char path[100] = { 0 };
@@ -248,6 +250,7 @@ void System_States_Manager() {
 				Set_Firebase_JSON_at("/", JSON);
 
 				System_State_Modify(DISPLAY_UPDATE);
+
 				break;
 			}
 

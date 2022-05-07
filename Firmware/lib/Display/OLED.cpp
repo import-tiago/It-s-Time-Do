@@ -157,9 +157,9 @@ void OLED_Build_Working_Screen(String current_duration, String Firmware_Version)
 	}
 }
 
-String Schedule_Clock() {
+/* String Schedule_Clock() {
 	return ScheduleClock;
-}
+} */
 
 void OLED_Print() {
 	display.display();

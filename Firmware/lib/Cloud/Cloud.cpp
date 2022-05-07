@@ -135,7 +135,7 @@ void Firebase_Init() {
 
 bool Set_Firebase_JSON_at(String Database_Path, FirebaseJson json) {
 	if (Firebase.ready())
-		return (Firebase.RTDB.updateNodeSilent(&fbdo, Database_Path, &json));
+		return (Firebase.RTDB.updateNodeSilentAsync(&fbdo, Database_Path, &json));
 	else
 		return false;
 }

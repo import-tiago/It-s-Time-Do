@@ -6,24 +6,12 @@
 
 #define FIRMWARE_ADDRESS "bin/firmware.bin"
 
-#define NOT_VALID_TIME "-1"
+/* static String ScheduleClock;
+static String Last_Start_Time; */
 
-
-static String ScheduleClock;
-static String Last_Start_Time;
-
-// Define Firebase Data object
 static FirebaseData fbdo;
-//static FirebaseData fbdo2;
-
 static FirebaseAuth auth;
 static FirebaseConfig config;
-
-
-
-
-
-
 
 struct Washing_Machine_Parameters {
 	const String WORKING = "WORKING...";
@@ -66,7 +54,7 @@ struct Push_Notifications {
 
 struct Task_Parameters {
 	bool running = false;
-	bool done = false;
+	bool new_report = false;
 
 	String initial_time;
 	String initial_date;
@@ -81,13 +69,11 @@ struct Task_Parameters {
 static FirebaseJson JSON;
 static FirebaseJson JSON_Tokens;
 static FirebaseJsonData JSON_Result;
-static String Next_Task = "FREE";
+static String Next_Task = Washing_Machine.FREE;
 
 // PROTOTYPES
 bool Get_Firebase_Bool_from(char* Database_Path);
-//void Set_Firebase_Bool_at(char *Database_Path, bool data);
 String Get_Firebase_String_from(char* Database_Path);
-//bool Set_Firebase_String_at(String Database_Path, String data);
 void fcsDownloadCallback(FCS_DownloadStatusInfo info);
 void Download_New_Firmware_by_OTA();
 void Checks_OTA_Firmware_Update();
