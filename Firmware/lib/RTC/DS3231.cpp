@@ -3,11 +3,10 @@
 #include "RTClib.h"
 #include <Arduino.h>
 
-static RTC_DS3231 RTC;
-static DateTime now;
-static bool RTC_Init_Fail = true;
-
-static char RTC_Buffer[11]; /* dd/mm/yyyy */
+RTC_DS3231 RTC;
+DateTime now;
+bool RTC_Init_Fail = true;
+char RTC_Buffer[11]; /* dd/mm/yyyy */
 
 const int days_per_month[2][MOS_PER_YEAR] = {
 		{31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
@@ -108,11 +107,5 @@ uint32_t Get_Timestamp(uint8_t hrs, uint8_t min, uint8_t sec, uint8_t day, uint8
 
 
 uint32_t Get_Current_Timestamp() {
-
-	const int sec = 0;
-	int day = Current_Date(JUST_DAY).toInt();
-	int month = Current_Date(JUST_MONTH).toInt();
-	int year = Current_Date(JUST_YEAR).toInt();
-
-	return Get_Timestamp(Current_Clock(JUST_HOUR).toInt(), Current_Clock(JUST_MIN).toInt(), sec, day, month, year);
+	return Get_Timestamp(Current_Clock(JUST_HOUR).toInt(), Current_Clock(JUST_MIN).toInt(), 0, Current_Date(JUST_DAY).toInt(), Current_Date(JUST_MONTH).toInt(), Current_Date(JUST_YEAR).toInt());
 }

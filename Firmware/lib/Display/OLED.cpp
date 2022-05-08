@@ -15,7 +15,6 @@
 #define WITHOUT_SECONDS 0
 
 static Adafruit_SSD1306 display(128, 64, &Wire, -1);
-static char dateBuffer[50];
 
 void OLED_Init() {
 	if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {

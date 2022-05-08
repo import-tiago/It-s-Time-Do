@@ -4,11 +4,21 @@
 #include "OLED.h"
 #include <Arduino.h>
 #include <TridentTD_ESP32NVS.h>
-// Provide the token generation process info.
-#include <addons/TokenHelper.h>
-// Provide the RTDB payload printing info and other helper functions.
 #include <Firebase_ESP_Client.h>
-#include <addons/RTDBHelper.h>
+#include <addons/TokenHelper.h> //Provide the token generation process info.
+#include <addons/RTDBHelper.h> //Provide the RTDB payload printing info and other helper functions.
+
+FirebaseJson JSON;
+FirebaseJson JSON_Tokens;
+FirebaseJsonData JSON_Deserialized;
+String Next_Task = Washing_Machine.FREE;
+
+FirebaseData fbdo;
+FirebaseAuth auth;
+FirebaseConfig config;
+
+struct Push_Notifications Push_Notification;
+struct Washing_Machine_Parameters Washing_Machine;
 
 bool isValid_Time(String time) {
 
@@ -133,29 +143,40 @@ void Firebase_Init() {
 	Firebase.FCM.setServerKey(FIREBASE_FCM_SERVER_KEY);
 }
 
-bool Set_Firebase_JSON_at(String Database_Path, FirebaseJson json) {
-	if (Firebase.ready())
-		return (Firebase.RTDB.updateNodeSilentAsync(&fbdo, Database_Path, &json));
+bool Set_Firebase_JSON_at(String Database_Path, FirebaseJson* json) {
+
+	if (Firebase.ready()) {
+
+		if (Firebase.RTDB.updateNode(&fbdo, Database_Path, json))
+			return true;
+		else
+			Serial.println(fbdo.errorReason().c_str());
+	}
 	else
 		return false;
 }
 
 void Extract_List_of_Web_Push_Notifications_Device_Tokens() {
 
-	fbdo.to<FirebaseJson>().get(JSON_Result, "/Notification_Tokens");
+	JSON_Deserialized.clear();
 
-	JSON_Result.get<FirebaseJson>(JSON_Tokens);
+	JSON.get(JSON_Deserialized, "/Notification_Tokens");
 
-	size_t count = JSON_Tokens.iteratorBegin();
+	if (JSON_Deserialized.success) {
+		JSON_Deserialized.get<FirebaseJson>(JSON_Tokens);
 
-	Push_Notification.Number_Registered_Devices = count;
+		size_t count = JSON_Tokens.iteratorBegin();
 
-	for (size_t i = 0; i < count; i++) {
-		FirebaseJson::IteratorValue value = JSON_Tokens.valueAt(i);
-		sprintf(&Push_Notification.Device_Tokens[i][0], value.key.c_str());
+		Push_Notification.Number_Registered_Devices = count;
+
+		for (size_t i = 0; i < count; i++) {
+			FirebaseJson::IteratorValue value = JSON_Tokens.valueAt(i);
+			sprintf(&Push_Notification.Device_Tokens[i][0], value.key.c_str());
+			//Serial.println(value.key.c_str());
+		}
+
+		JSON_Tokens.iteratorEnd(); // required for free the used memory in iteration
 	}
-
-	JSON_Tokens.iteratorEnd(); // required for free the used memory in iteration
 }
 
 void Send_Web_Push_Notification(int8_t type_message) {

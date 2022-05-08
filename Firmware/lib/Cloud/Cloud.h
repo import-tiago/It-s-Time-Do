@@ -6,12 +6,14 @@
 
 #define FIRMWARE_ADDRESS "bin/firmware.bin"
 
-/* static String ScheduleClock;
-static String Last_Start_Time; */
+extern FirebaseData fbdo;
+extern FirebaseAuth auth;
+extern FirebaseConfig config;
 
-static FirebaseData fbdo;
-static FirebaseAuth auth;
-static FirebaseConfig config;
+extern FirebaseJson JSON;
+extern FirebaseJson JSON_Tokens;
+extern FirebaseJsonData JSON_Deserialized;
+extern String Next_Task;
 
 struct Washing_Machine_Parameters {
 	const String WORKING = "WORKING...";
@@ -21,7 +23,9 @@ struct Washing_Machine_Parameters {
 	bool Initializing = false;
 
 	String washing_mode = "?";
-} static Washing_Machine;
+};
+
+extern struct Washing_Machine_Parameters Washing_Machine;
 
 struct Notification_Task_Initialized_Parameters {
 	String notification_icon_addr = "https://img.icons8.com/external-flaticons-lineal-color-flat-icons/344/external-time-gig-economy-flaticons-lineal-color-flat-icons-2.png";
@@ -50,36 +54,17 @@ struct Push_Notifications {
 	struct Notification_Task_Fail_Parameters fail;
 	char Device_Tokens[10][200];
 	uint8_t Number_Registered_Devices = 0;
-} static  Push_Notification;
+};
 
-struct Task_Parameters {
-	bool running = false;
-	bool new_report = false;
-
-	String initial_time;
-	String initial_date;
-	uint32_t initial_timestamp;
-
-	String finished_time;
-	String finished_date;
-
-	String duration;
-} static  Task;
-
-static FirebaseJson JSON;
-static FirebaseJson JSON_Tokens;
-static FirebaseJsonData JSON_Result;
-static String Next_Task = Washing_Machine.FREE;
+extern struct Push_Notifications Push_Notification;
 
 // PROTOTYPES
-bool Get_Firebase_Bool_from(char* Database_Path);
-String Get_Firebase_String_from(char* Database_Path);
 void fcsDownloadCallback(FCS_DownloadStatusInfo info);
 void Download_New_Firmware_by_OTA();
 void Checks_OTA_Firmware_Update();
 void Firebase_Init();
 bool isValid_Time(String from_cloud);
-bool Set_Firebase_JSON_at(String Database_Path, FirebaseJson json);
+bool Set_Firebase_JSON_at(String Database_Path, FirebaseJson* json);
 void Extract_List_of_Web_Push_Notifications_Device_Tokens();
 void Send_Web_Push_Notification(int8_t type_message);
 

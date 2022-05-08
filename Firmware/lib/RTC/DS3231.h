@@ -2,7 +2,7 @@
 #define DS3231_H
 
 #include <Arduino.h>
-
+#include "RTClib.h"
 #include <stdint.h>
 
 #define SEC_PER_MIN 60
@@ -14,8 +14,6 @@
 
 
 
-uint32_t
-Get_Timestamp(uint8_t hrs, uint8_t min, uint8_t sec, uint8_t day, uint8_t mon, uint16_t year);
 
 #define PRINT_SECONDS 1
 #define WITHOUT_SECONDS 0
@@ -28,11 +26,20 @@ Get_Timestamp(uint8_t hrs, uint8_t min, uint8_t sec, uint8_t day, uint8_t mon, u
 #define JUST_HOUR 1
 #define JUST_MIN 2
 
+
+
+
+extern RTC_DS3231 RTC;
+extern DateTime now;
+extern bool RTC_Init_Fail;
+extern char RTC_Buffer[11]; /* dd/mm/yyyy */
+
 // PROTOTYPES
 String Current_Date(int format);
 String Current_Clock(int format);
 void RTC_Init();
 bool RTC_Status();
 uint32_t Get_Current_Timestamp();
+uint32_t Get_Timestamp(uint8_t hrs, uint8_t min, uint8_t sec, uint8_t day, uint8_t mon, uint16_t year);
 
 #endif // DS3231_H
