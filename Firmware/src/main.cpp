@@ -113,6 +113,8 @@ void System_States_Manager() {
 
 				JSON.get(JSON_Deserialized, "/START");
 
+				JSON.remove("/START");
+
 				if (JSON_Deserialized.success) {
 
 					String hour = JSON_Deserialized.to<String>();
@@ -195,6 +197,8 @@ void System_States_Manager() {
 
 				JSON.clear();
 				while (!Firebase.RTDB.getJSON(&fbdo, "/", &JSON));
+
+				JSON.remove("/START");
 
 				//Serial.println("\r\n\r\nJSON:");
 				//JSON.toString(Serial, true);
