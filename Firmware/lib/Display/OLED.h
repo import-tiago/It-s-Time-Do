@@ -7,7 +7,7 @@
 #include <SPI.h>
 #include <Wire.h>
 
-
+extern Adafruit_SSD1306 display;
 
 // PROTOTYPES
 void OLED_Init();
