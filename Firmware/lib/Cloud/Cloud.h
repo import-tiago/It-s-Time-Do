@@ -65,6 +65,7 @@ void Checks_OTA_Firmware_Update();
 void Firebase_Init();
 bool isValid_Time(String from_cloud);
 bool Set_Firebase_JSON_at(String Database_Path, FirebaseJson* json);
+bool Get_Firebase_JSON_at(String Database_Path, FirebaseJson* json);
 void Extract_List_of_Web_Push_Notifications_Device_Tokens();
 void Send_Web_Push_Notification(int8_t type_message);
 

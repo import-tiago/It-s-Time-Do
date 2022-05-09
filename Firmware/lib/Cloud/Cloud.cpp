@@ -156,6 +156,20 @@ bool Set_Firebase_JSON_at(String Database_Path, FirebaseJson* json) {
 		return false;
 }
 
+bool Get_Firebase_JSON_at(String Database_Path, FirebaseJson* json) {
+
+	if (Firebase.ready()) {
+
+		if (Firebase.RTDB.getJSON(&fbdo, "/", json))
+			return true;
+		else
+			Serial.println(fbdo.errorReason().c_str());
+	}
+	else
+		return false;
+}
+
+
 void Extract_List_of_Web_Push_Notifications_Device_Tokens() {
 
 	JSON_Deserialized.clear();

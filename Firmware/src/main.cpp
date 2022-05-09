@@ -1,4 +1,4 @@
-#define FIRMWARE_VERSION "1.8"
+#define FIRMWARE_VERSION "1.8.1"
 /*
 v1.0    - Initial release.
 v1.1    - Bug fix in task duration calcs.
@@ -22,6 +22,7 @@ v1.7  	- Update library 'Firebase-ESP32' from  v3.2.0 to v3.3.0.
 		- Minor improvements in variables/functions names (more intuitive code reading).
 		- Bug fix in Last_Task fild (data being erased after some time).
 v1.8 	- Static variables changed to extern where appropriate.
+v1.8.1 	- Now, Firebase_Get runs 'FirebaseReady' to ensure the connection in while loops.
 */
 
 /* Native libraries */
@@ -73,6 +74,8 @@ void System_States_Manager() {
 
 		case STARTING: {
 
+				Serial.println("3");
+
 				Next_Task = Washing_Machine.FREE;
 
 				Current_System_State = DISPLAY_UPDATE;
@@ -81,7 +84,7 @@ void System_States_Manager() {
 			}
 
 		case DISPLAY_UPDATE: {
-
+				Serial.println("4");
 				OLED_Clear();
 
 				if (Task.running)
@@ -96,17 +99,17 @@ void System_States_Manager() {
 			}
 
 		case GET_CLOUD_JSON_DATA: {
-
+				Serial.println("5");
 				JSON.clear();
 
-				if (Firebase.RTDB.getJSON(&fbdo, "/", &JSON))
+				if (Get_Firebase_JSON_at("/", &JSON))
 					Current_System_State = DESERIALIZE_JSON_DATA;
 
 				break;
 			}
 
 		case DESERIALIZE_JSON_DATA: {
-
+				Serial.println("6");
 				Extract_List_of_Web_Push_Notifications_Device_Tokens();
 
 				JSON_Deserialized.clear();
@@ -124,15 +127,20 @@ void System_States_Manager() {
 						Next_Task = hour;
 						Current_System_State = REMOTE_TRIGGER_MONITOR;
 					}
-					else
+					else {
+
+						Next_Task = Washing_Machine.FREE;
 						Current_System_State = LOCAL_TRIGGER_MONITOR;
+					}
 				}
+				else
+					Current_System_State = GET_CLOUD_JSON_DATA;
 
 				break;
 			}
 
 		case REMOTE_TRIGGER_MONITOR: {
-
+				Serial.println("7");
 				int hour = Next_Task.substring(0, Next_Task.indexOf(":")).toInt();
 				int min = Next_Task.substring(Next_Task.indexOf(":") + 1).toInt();
 				const int sec = 0;
@@ -153,7 +161,7 @@ void System_States_Manager() {
 			}
 
 		case LOCAL_TRIGGER_MONITOR: {
-
+				Serial.println("8");
 				if (!Task.running && Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED)) {
 
 					Next_Task = Washing_Machine.WORKING;
@@ -171,7 +179,7 @@ void System_States_Manager() {
 			}
 
 		case TASK_STATUS_MONITOR: {
-
+				Serial.println("9");
 				if (Task.running && !Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED)) {
 
 					Serial.println("Task.running = false");
@@ -194,9 +202,11 @@ void System_States_Manager() {
 			}
 
 		case SET_CLOUD_JSON: {
-
+				Serial.println("a");
 				JSON.clear();
-				while (!Firebase.RTDB.getJSON(&fbdo, "/", &JSON));
+				while (!Get_Firebase_JSON_at("/", &JSON)) {
+					Serial.println("1");
+				}
 
 				JSON.remove("/START");
 
@@ -233,6 +243,7 @@ void System_States_Manager() {
 						JSON.set(path, Task.duration);
 
 					}
+					Serial.println("2");
 				} while (!Set_Firebase_JSON_at("/", &JSON));
 
 				Current_System_State = DISPLAY_UPDATE;
