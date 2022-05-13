@@ -25,7 +25,7 @@ void RTC_Init() {
 	else
 		RTC_Init_Fail = false;
 
-	// RTC.adjust(DateTime(2022, 4, 30, 21, 39, 0));
+	 //RTC.adjust(DateTime(2022, 5, 9, 21, 21, 0));
 }
 
 bool RTC_Status() {

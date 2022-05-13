@@ -1,4 +1,4 @@
-#define FIRMWARE_VERSION "1.8.1"
+#define FIRMWARE_VERSION "1.9"
 /*
 v1.0    - Initial release.
 v1.1    - Bug fix in task duration calcs.
@@ -24,6 +24,8 @@ v1.7  	- 'Firebase-ESP32' library updated from v3.2.0 to v3.3.0.
 v1.8 	- Static variables changed to extern where appropriate.
 v1.8.1 	- Now, Firebase_Get runs 'FirebaseReady' to ensure the connection in while loops.
 		- 'Firebase-ESP32' library updated from v3.3.0 to v3.2.2 (author's downgrade)
+v1.9 	- 'Firebase-ESP32' library updated from v3.2.2 to v3.3.2.
+		- Ensures that when task is RUNNING the /IoT_Device/Schedule shows status as RUNNING too.
 */
 
 /* Native libraries */
@@ -128,7 +130,9 @@ void System_States_Manager() {
 					}
 					else {
 
-						Next_Task = Washing_Machine.FREE;
+						if (!Task.running)
+							Next_Task = Washing_Machine.FREE;
+
 						Current_System_State = LOCAL_TRIGGER_MONITOR;
 					}
 				}
