@@ -30,7 +30,7 @@ extern struct Washing_Machine_Parameters Washing_Machine;
 struct Notification_Task_Initialized_Parameters {
 	String notification_icon_addr = "https://img.icons8.com/external-flaticons-lineal-color-flat-icons/344/external-time-gig-economy-flaticons-lineal-color-flat-icons-2.png";
 	String notification_title = "TASK STARTED";
-	String notification_body = "Your scheduled laundry has just started. You will be notified when it is finished.";
+	String notification_body = "Your scheduled task has just started. You will be notified when it is finished.";
 	const uint8_t TASK_INIT = 0;
 };
 
