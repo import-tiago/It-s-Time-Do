@@ -1,5 +1,9 @@
 # It's Time, Do!
 
+It's Time, Do! is a tiny device to control over the internet the on/off and/or programming to automatically run other devices and electronic equipments.
+
+The inspiration for creating this project comes from the need to schedule my washing machine to auto-start when I'm out and about to save time and just put the clothes to dry when I get home.
+
 ## Schematic Preview
 <p align="center"><a href="https://github.com/TiagoPaulaSilva/It-s-Time-Do/blob/main/Hardware/0.%20Project/It-s%20Time%2C%20Do.pdf"><img src="https://github.com/TiagoPaulaSilva/It-s-Time-Do/blob/main/Assets/Schematic.png" width="100%" height="100%" title="Watch the video" alt="Watch the video"></a></p>
 
