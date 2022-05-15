@@ -1,6 +1,6 @@
 # It's Time, Do!
 
-It's Time, Do! is a tiny device to control over the internet the on/off and/or programming to automatically run other devices and electronic equipments.
+It's Time, Do! is a tiny device to control over the internet the on/off or programming to automatically run other devices and electronic equipments.
 
 The inspiration for creating this project comes from the need to schedule my washing machine to auto-start when I'm out and about to save time and just put the clothes to dry when I get home.
 
