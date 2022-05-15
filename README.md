@@ -2,7 +2,7 @@
 
 __It's Time, Do!__ is a system (hardware + firmware + web application) to control over the internet the on/off or programming to automatically run other devices and electronic equipments.
 
-The inspiration for creating this project comes from the need to schedule my washing machine to auto-start when I'm out and about to save time and just put the clothes to dry when I get home.
+The inspiration for creating this project comes from the need to schedule my ~~not smart~~ washing machine to auto-start when I'm out and about to save time and just put the clothes to dry when I get home.
 
 <img src="https://github.com/TiagoPaulaSilva/It-s-Time-Do/blob/main/Assets/WashMachinePanel.png" alt="WashingMachine" width="100%"/>
 
