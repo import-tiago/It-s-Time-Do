@@ -1200,7 +1200,7 @@ Fully Shrouded&lt;BR&gt;</description>
 </package3d>
 </packages3d>
 <symbols>
-<symbol name="ESP32-WROOM-32E" urn="urn:adsk.eagle:symbol:35667699/2" locally_modified="yes" library_version="3" library_locally_modified="yes">
+<symbol name="ESP32-WROOM-32E" urn="urn:adsk.eagle:symbol:35667699/3" library_version="4">
 <wire x1="-15.24" y1="38.1" x2="15.24" y2="38.1" width="0.254" layer="94"/>
 <wire x1="15.24" y1="38.1" x2="15.24" y2="-35.56" width="0.254" layer="94"/>
 <wire x1="15.24" y1="-35.56" x2="-15.24" y2="-35.56" width="0.254" layer="94"/>
@@ -1239,7 +1239,7 @@ Fully Shrouded&lt;BR&gt;</description>
 </symbol>
 </symbols>
 <devicesets>
-<deviceset name="ESP32-WROOM-32E" urn="urn:adsk.eagle:component:35667705/3" prefix="SOC" library_version="3" library_locally_modified="yes">
+<deviceset name="ESP32-WROOM-32E" urn="urn:adsk.eagle:component:35667705/4" prefix="SOC" library_version="4">
 <description>Espressif WiFi Module &lt;BR&gt;&lt;BR&gt;
 
 
@@ -3649,7 +3649,7 @@ chip tantalum</description>
 </library>
 <library name="My-Displays" urn="urn:adsk.eagle:library:35510881">
 <packages>
-<package name="OLED-RAW-0.96&quot;" urn="urn:adsk.eagle:footprint:35806499/1" library_version="3">
+<package name="OLED-RAW-0.96&quot;" urn="urn:adsk.eagle:footprint:35806499/4" library_version="8">
 <wire x1="-13.353" y1="14.36" x2="13.35" y2="14.36" width="0.2032" layer="21"/>
 <wire x1="13.35" y1="14.36" x2="13.35" y2="-4.9" width="0.2032" layer="21"/>
 <wire x1="13.35" y1="-4.9" x2="-13.35" y2="-4.9" width="0.2032" layer="21"/>
@@ -3694,10 +3694,15 @@ chip tantalum</description>
 <text x="3.3" y="0.412" size="0.8128" layer="52" font="vector" rot="R90">20</text>
 <text x="10.45" y="0.412" size="0.8128" layer="52" font="vector" rot="R90">30</text>
 <text x="-13.09" y="15.69" size="0.8128" layer="25" ratio="18">&gt;NAME</text>
-<text x="-13.09" y="-9.1" size="0.4064" layer="27" ratio="10">&gt;VALUE</text>
 <text x="-5.2" y="-7" size="0.8128" layer="51">PCB EDGE (1.6mm)</text>
 <hole x="-8" y="-5.45" drill="0.4"/>
 <hole x="8" y="-5.45" drill="0.4"/>
+<polygon width="0.127" layer="22">
+<vertex x="-10.63625" y="-2.38125"/>
+<vertex x="-10.63625" y="-0.079375"/>
+<vertex x="-10.795" y="-0.079375"/>
+<vertex x="-10.795" y="-2.38125"/>
+</polygon>
 </package>
 <package name="OLED-RAW-1.3&quot;" urn="urn:adsk.eagle:footprint:35806500/1" library_version="3">
 <wire x1="-17.25" y1="15.5" x2="17.25" y2="15.5" width="0.2032" layer="21"/>
@@ -3750,7 +3755,7 @@ chip tantalum</description>
 </package>
 </packages>
 <packages3d>
-<package3d name="OLED-RAW-0.96&quot;" urn="urn:adsk.eagle:package:35806502/1" type="box" library_version="3">
+<package3d name="OLED-RAW-0.96&quot;" urn="urn:adsk.eagle:package:35807155/3" type="model" library_version="8">
 <packageinstances>
 <packageinstance name="OLED-RAW-0.96&quot;"/>
 </packageinstances>
@@ -3812,7 +3817,7 @@ Driver + Controller</text>
 </symbol>
 </symbols>
 <devicesets>
-<deviceset name="OLED-RAW" urn="urn:adsk.eagle:component:35806504/1" prefix="DS" uservalue="yes" library_version="3">
+<deviceset name="OLED-RAW" urn="urn:adsk.eagle:component:35806504/5" prefix="DS" uservalue="yes" library_version="8">
 <description>UG-2864HSWEG01 OLED display
 &lt;p&gt;Both 1.3" and 0.96" models share the same FPC tab footprint, only the screen dimensions vary.&lt;/p&gt;</description>
 <gates>
@@ -3850,7 +3855,7 @@ Driver + Controller</text>
 <connect gate="G$1" pin="VSS" pad="1 8 30"/>
 </connects>
 <package3dinstances>
-<package3dinstance package3d_urn="urn:adsk.eagle:package:35806502/1"/>
+<package3dinstance package3d_urn="urn:adsk.eagle:package:35807155/3"/>
 </package3dinstances>
 <technologies>
 <technology name="">
@@ -5275,7 +5280,7 @@ package type OT</description>
 <part name="SUPPLY50" library="My-Supply" library_urn="urn:adsk.eagle:library:35531236" deviceset="0V" device=""/>
 <part name="R21" library="My-RLC" library_urn="urn:adsk.eagle:library:35509816" deviceset="R_" device="0603" package3d_urn="urn:adsk.eagle:package:35509946/1" value="4k7 (5%)"/>
 <part name="R22" library="My-RLC" library_urn="urn:adsk.eagle:library:35509816" deviceset="R_" device="0603" package3d_urn="urn:adsk.eagle:package:35509946/1" value="4k7 (5%)"/>
-<part name="DS1" library="My-Displays" library_urn="urn:adsk.eagle:library:35510881" deviceset="OLED-RAW" device="-0.96&quot;" package3d_urn="urn:adsk.eagle:package:35806502/1" value="0.96&quot; active Area / 128x64 pixels"/>
+<part name="DS1" library="My-Displays" library_urn="urn:adsk.eagle:library:35510881" deviceset="OLED-RAW" device="-0.96&quot;" package3d_urn="urn:adsk.eagle:package:35807155/3" value="0.96&quot; active Area / 128x64 pixels"/>
 <part name="SUPPLY1" library="My-Supply" library_urn="urn:adsk.eagle:library:35531236" deviceset="3.3V" device=""/>
 <part name="C13" library="My-RLC" library_urn="urn:adsk.eagle:library:35509816" deviceset="C_" device="0603" package3d_urn="urn:adsk.eagle:package:35509984/1" value="100nF">
 <attribute name="PARTNO" value="GRM155R71H104KE14D"/>
@@ -5721,25 +5726,25 @@ at 500mA</text>
 <attribute name="VALUE" x="107.315" y="210.2866" size="1.27" layer="96" rot="R270" align="center"/>
 </instance>
 <instance part="SUPPLY32" gate="G$1" x="38.735" y="182.245" smashed="yes" grouprefs="POWER_SUPPLY"/>
-<instance part="R3" gate="G$1" x="38.735" y="216.535" smashed="yes" rot="R270" grouprefs="POWER_SUPPLY EXTERNAL_USB_POWER_SUPPLY_INPUT">
-<attribute name="PARTNO" x="38.735" y="216.535" size="1.778" layer="96" display="off"/>
-<attribute name="NAME" x="40.8686" y="216.535" size="1.27" layer="95" rot="R270" align="center"/>
-<attribute name="VALUE" x="36.83" y="216.535" size="1.27" layer="96" rot="R270" align="center"/>
+<instance part="R3" gate="G$1" x="38.735" y="216.535" smashed="yes" rot="MR270" grouprefs="POWER_SUPPLY EXTERNAL_USB_POWER_SUPPLY_INPUT">
+<attribute name="PARTNO" x="38.735" y="216.535" size="1.778" layer="96" rot="MR0" display="off"/>
+<attribute name="NAME" x="36.6014" y="216.535" size="1.27" layer="95" rot="MR270" align="center"/>
+<attribute name="VALUE" x="40.64" y="216.535" size="1.27" layer="96" rot="MR270" align="center"/>
 </instance>
-<instance part="R9" gate="G$1" x="101.6" y="216.535" smashed="yes" rot="R270" grouprefs="POWER_SUPPLY EXTERNAL_USB_POWER_SUPPLY_INPUT">
-<attribute name="PARTNO" x="101.6" y="216.535" size="1.778" layer="96" display="off"/>
-<attribute name="NAME" x="103.7336" y="216.535" size="1.27" layer="95" rot="R270" align="center"/>
-<attribute name="VALUE" x="99.695" y="216.535" size="1.27" layer="96" rot="R270" align="center"/>
+<instance part="R9" gate="G$1" x="101.6" y="216.535" smashed="yes" rot="MR270" grouprefs="POWER_SUPPLY EXTERNAL_USB_POWER_SUPPLY_INPUT">
+<attribute name="PARTNO" x="101.6" y="216.535" size="1.778" layer="96" rot="MR0" display="off"/>
+<attribute name="NAME" x="99.4664" y="216.535" size="1.27" layer="95" rot="MR270" align="center"/>
+<attribute name="VALUE" x="103.505" y="216.535" size="1.27" layer="96" rot="MR270" align="center"/>
 </instance>
-<instance part="R4" gate="G$1" x="45.085" y="200.025" smashed="yes" rot="R270" grouprefs="POWER_SUPPLY EXTERNAL_USB_POWER_SUPPLY_INPUT">
-<attribute name="PARTNO" x="45.085" y="200.025" size="1.778" layer="96" display="off"/>
-<attribute name="NAME" x="47.2186" y="200.025" size="1.27" layer="95" rot="R270" align="center"/>
-<attribute name="VALUE" x="43.18" y="200.025" size="1.27" layer="96" rot="R270" align="center"/>
+<instance part="R4" gate="G$1" x="45.085" y="200.025" smashed="yes" rot="R90" grouprefs="POWER_SUPPLY EXTERNAL_USB_POWER_SUPPLY_INPUT">
+<attribute name="PARTNO" x="45.085" y="200.025" size="1.778" layer="96" rot="R180" display="off"/>
+<attribute name="NAME" x="42.9514" y="200.025" size="1.27" layer="95" rot="R90" align="center"/>
+<attribute name="VALUE" x="46.99" y="200.025" size="1.27" layer="96" rot="R90" align="center"/>
 </instance>
-<instance part="C2" gate="G$1" x="55.245" y="198.755" smashed="yes" rot="R180" grouprefs="POWER_SUPPLY EXTERNAL_USB_POWER_SUPPLY_INPUT">
-<attribute name="PARTNO" x="55.245" y="198.755" size="1.778" layer="96" display="off"/>
-<attribute name="NAME" x="58.3565" y="200.1012" size="1.27" layer="95" rot="R270" align="center"/>
-<attribute name="VALUE" x="52.07" y="200.1266" size="1.27" layer="96" rot="R270" align="center"/>
+<instance part="C2" gate="G$1" x="55.245" y="201.295" smashed="yes" grouprefs="POWER_SUPPLY EXTERNAL_USB_POWER_SUPPLY_INPUT">
+<attribute name="PARTNO" x="55.245" y="201.295" size="1.778" layer="96" rot="R180" display="off"/>
+<attribute name="NAME" x="52.1335" y="199.9488" size="1.27" layer="95" rot="R90" align="center"/>
+<attribute name="VALUE" x="58.42" y="199.9234" size="1.27" layer="96" rot="R90" align="center"/>
 </instance>
 <instance part="C4" gate="G$1" x="121.285" y="208.915" smashed="yes" rot="R180" grouprefs="POWER_SUPPLY EXTERNAL_USB_POWER_SUPPLY_INPUT">
 <attribute name="PARTNO" x="121.285" y="208.915" size="1.778" layer="96" display="off"/>
@@ -6123,10 +6128,8 @@ at 500mA</text>
 </segment>
 <segment>
 <pinref part="C3" gate="G$1" pin="1"/>
-<pinref part="R4" gate="G$1" pin="2"/>
 <pinref part="R14" gate="G$1" pin="1"/>
 <wire x1="110.49" y1="189.865" x2="110.49" y2="206.375" width="0.1524" layer="91" grouprefs="POWER_SUPPLY EXTERNAL_USB_POWER_SUPPLY_INPUT"/>
-<wire x1="45.085" y1="189.865" x2="45.085" y2="194.945" width="0.1524" layer="91" grouprefs="POWER_SUPPLY EXTERNAL_USB_POWER_SUPPLY_INPUT"/>
 <wire x1="164.465" y1="194.945" x2="164.465" y2="189.865" width="0.1524" layer="91" grouprefs="BATTERY_CHARGE_MANAGEMENT_CONTROLLER POWER_SUPPLY"/>
 <pinref part="U3" gate="G$1" pin="VSS"/>
 <wire x1="191.135" y1="200.025" x2="191.135" y2="189.865" width="0.1524" layer="91" grouprefs="BATTERY_CHARGE_MANAGEMENT_CONTROLLER POWER_SUPPLY"/>
@@ -6172,15 +6175,11 @@ at 500mA</text>
 <wire x1="38.735" y1="189.865" x2="38.735" y2="184.785" width="0.1524" layer="91" grouprefs="POWER_SUPPLY"/>
 <wire x1="164.465" y1="189.865" x2="121.285" y2="189.865" width="0.1524" layer="91" grouprefs="POWER_SUPPLY"/>
 <junction x="38.735" y="189.865" grouprefs="EXTERNAL_USB_POWER_SUPPLY_INPUT POWER_SUPPLY"/>
-<junction x="45.085" y="189.865" grouprefs="EXTERNAL_USB_POWER_SUPPLY_INPUT POWER_SUPPLY"/>
 <wire x1="121.285" y1="189.865" x2="110.49" y2="189.865" width="0.1524" layer="91" grouprefs="EXTERNAL_USB_POWER_SUPPLY_INPUT POWER_SUPPLY"/>
 <wire x1="110.49" y1="189.865" x2="101.6" y2="189.865" width="0.1524" layer="91" grouprefs="EXTERNAL_USB_POWER_SUPPLY_INPUT POWER_SUPPLY"/>
 <wire x1="101.6" y1="189.865" x2="55.245" y2="189.865" width="0.1524" layer="91" grouprefs="EXTERNAL_USB_POWER_SUPPLY_INPUT POWER_SUPPLY"/>
 <wire x1="55.245" y1="189.865" x2="45.085" y2="189.865" width="0.1524" layer="91" grouprefs="EXTERNAL_USB_POWER_SUPPLY_INPUT POWER_SUPPLY"/>
 <wire x1="45.085" y1="189.865" x2="38.735" y2="189.865" width="0.1524" layer="91" grouprefs="EXTERNAL_USB_POWER_SUPPLY_INPUT POWER_SUPPLY"/>
-<pinref part="C2" gate="G$1" pin="1"/>
-<junction x="55.245" y="189.865" grouprefs="EXTERNAL_USB_POWER_SUPPLY_INPUT POWER_SUPPLY"/>
-<wire x1="55.245" y1="189.865" x2="55.245" y2="196.215" width="0.1524" layer="91" grouprefs="POWER_SUPPLY EXTERNAL_USB_POWER_SUPPLY_INPUT"/>
 <wire x1="94.615" y1="211.455" x2="101.6" y2="211.455" width="0.1524" layer="91" grouprefs="POWER_SUPPLY EXTERNAL_USB_POWER_SUPPLY_INPUT"/>
 <wire x1="101.6" y1="211.455" x2="101.6" y2="189.865" width="0.1524" layer="91" grouprefs="POWER_SUPPLY EXTERNAL_USB_POWER_SUPPLY_INPUT"/>
 <pinref part="CN1" gate="G$1" pin="GND_B"/>
@@ -6191,6 +6190,12 @@ at 500mA</text>
 <pinref part="C4" gate="G$1" pin="1"/>
 <junction x="121.285" y="189.865" grouprefs="EXTERNAL_USB_POWER_SUPPLY_INPUT POWER_SUPPLY"/>
 <wire x1="121.285" y1="189.865" x2="121.285" y2="206.375" width="0.1524" layer="91" grouprefs="POWER_SUPPLY EXTERNAL_USB_POWER_SUPPLY_INPUT"/>
+<pinref part="R4" gate="G$1" pin="1"/>
+<wire x1="45.085" y1="194.945" x2="45.085" y2="189.865" width="0.1524" layer="91"/>
+<junction x="45.085" y="189.865"/>
+<pinref part="C2" gate="G$1" pin="2"/>
+<wire x1="55.245" y1="196.215" x2="55.245" y2="189.865" width="0.1524" layer="91"/>
+<junction x="55.245" y="189.865"/>
 </segment>
 <segment>
 <wire x1="310.515" y1="55.88" x2="310.515" y2="51.435" width="0.1524" layer="91" grouprefs="REAL_TIME_CLOCK"/>
@@ -6591,10 +6596,10 @@ at 500mA</text>
 </net>
 <net name="N$8" class="0">
 <segment>
-<pinref part="R3" gate="G$1" pin="1"/>
 <wire x1="59.055" y1="229.235" x2="38.735" y2="229.235" width="0.1524" layer="91" grouprefs="POWER_SUPPLY EXTERNAL_USB_POWER_SUPPLY_INPUT"/>
-<wire x1="38.735" y1="229.235" x2="38.735" y2="221.615" width="0.1524" layer="91" grouprefs="POWER_SUPPLY EXTERNAL_USB_POWER_SUPPLY_INPUT"/>
 <pinref part="CN1" gate="G$1" pin="CC1"/>
+<pinref part="R3" gate="G$1" pin="1"/>
+<wire x1="38.735" y1="221.615" x2="38.735" y2="229.235" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$21" class="0">
@@ -6606,14 +6611,14 @@ at 500mA</text>
 </net>
 <net name="N$10" class="0">
 <segment>
-<pinref part="R4" gate="G$1" pin="1"/>
 <wire x1="59.055" y1="208.915" x2="55.245" y2="208.915" width="0.1524" layer="91" grouprefs="POWER_SUPPLY EXTERNAL_USB_POWER_SUPPLY_INPUT"/>
-<wire x1="55.245" y1="208.915" x2="45.085" y2="208.915" width="0.1524" layer="91" grouprefs="POWER_SUPPLY EXTERNAL_USB_POWER_SUPPLY_INPUT"/>
-<wire x1="45.085" y1="208.915" x2="45.085" y2="205.105" width="0.1524" layer="91" grouprefs="POWER_SUPPLY EXTERNAL_USB_POWER_SUPPLY_INPUT"/>
-<pinref part="C2" gate="G$1" pin="2"/>
-<wire x1="55.245" y1="203.835" x2="55.245" y2="208.915" width="0.1524" layer="91" grouprefs="POWER_SUPPLY EXTERNAL_USB_POWER_SUPPLY_INPUT"/>
-<junction x="55.245" y="208.915" grouprefs="POWER_SUPPLY EXTERNAL_USB_POWER_SUPPLY_INPUT"/>
 <pinref part="CN1" gate="G$1" pin="SHIELD"/>
+<pinref part="R4" gate="G$1" pin="2"/>
+<wire x1="55.245" y1="208.915" x2="45.085" y2="208.915" width="0.1524" layer="91" grouprefs="POWER_SUPPLY EXTERNAL_USB_POWER_SUPPLY_INPUT"/>
+<wire x1="45.085" y1="205.105" x2="45.085" y2="208.915" width="0.1524" layer="91"/>
+<pinref part="C2" gate="G$1" pin="1"/>
+<wire x1="55.245" y1="203.835" x2="55.245" y2="208.915" width="0.1524" layer="91"/>
+<junction x="55.245" y="208.915"/>
 </segment>
 </net>
 <net name="VBUS" class="0">
