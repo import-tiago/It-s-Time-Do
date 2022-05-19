@@ -4618,6 +4618,31 @@ Vgs - Gate-Source Voltage:	- 25 V, + 25 V&lt;BR&gt;</description>
 <description>Generated from &lt;b&gt;EDC Energy Meter.sch&lt;/b&gt;&lt;p&gt;
 by exp-lbrs.ulp</description>
 <packages>
+<package name="EE2-5NU" urn="urn:adsk.eagle:footprint:35848295/1" library_version="8">
+<description>&lt;b&gt;EE2-5NU&lt;/b&gt;&lt;br&gt;
+</description>
+<smd name="1" x="2" y="-3.645" dx="3" dy="1.1" layer="1" rot="R90"/>
+<smd name="3" x="7.08" y="-3.645" dx="3" dy="1.1" layer="1" rot="R90"/>
+<smd name="4" x="9.62" y="-3.645" dx="3" dy="1.1" layer="1" rot="R90"/>
+<smd name="5" x="12.16" y="-3.645" dx="3" dy="1.1" layer="1" rot="R90"/>
+<smd name="8" x="12.16" y="3.645" dx="3" dy="1.1" layer="1" rot="R90"/>
+<smd name="9" x="9.62" y="3.645" dx="3" dy="1.1" layer="1" rot="R90"/>
+<smd name="10" x="7.08" y="3.645" dx="3" dy="1.1" layer="1" rot="R90"/>
+<smd name="12" x="2" y="3.645" dx="3" dy="1.1" layer="1" rot="R90"/>
+<text x="6.2006" y="0.547959375" size="1.27" layer="25" align="center">&gt;NAME</text>
+<text x="6.2268" y="0.4352" size="1.27" layer="27" align="center">&gt;VALUE</text>
+<wire x1="0" y1="3.75" x2="15" y2="3.75" width="0.2" layer="51"/>
+<wire x1="15" y1="3.75" x2="15" y2="-3.75" width="0.2" layer="51"/>
+<wire x1="15" y1="-3.75" x2="0" y2="-3.75" width="0.2" layer="51"/>
+<wire x1="0" y1="-3.75" x2="0" y2="3.75" width="0.2" layer="51"/>
+<wire x1="0" y1="-3.75" x2="0" y2="3.75" width="0.2" layer="21"/>
+<wire x1="15" y1="3.75" x2="15" y2="-3.75" width="0.2" layer="21"/>
+<wire x1="15" y1="-3.75" x2="13.04" y2="-3.75" width="0.2" layer="21"/>
+<wire x1="15" y1="3.75" x2="13.04" y2="3.75" width="0.2" layer="21"/>
+<wire x1="2.858" y1="3.75" x2="6.193" y2="3.75" width="0.2" layer="21"/>
+<wire x1="2.858" y1="-3.75" x2="6.193" y2="-3.75" width="0.2" layer="21"/>
+<circle x="2.013" y="-5.677" radius="0.178" width="0.4" layer="25"/>
+</package>
 <package name="EC2-5NU" urn="urn:adsk.eagle:footprint:35802174/1" library_version="3" library_locally_modified="yes">
 <circle x="-6.987" y="-3.09" radius="0.07631875" width="0.254" layer="25"/>
 <wire x1="-6.35" y1="3.81" x2="8.65" y2="3.81" width="0.254" layer="51"/>
@@ -4640,6 +4665,12 @@ by exp-lbrs.ulp</description>
 </package>
 </packages>
 <packages3d>
+<package3d name="EE2-5NU" urn="urn:adsk.eagle:package:35848296/1" type="box" library_version="8">
+<description>&lt;b&gt;EE2-5NU&lt;/b&gt;&lt;br&gt;</description>
+<packageinstances>
+<packageinstance name="EE2-5NU"/>
+</packageinstances>
+</package3d>
 <package3d name="EC2-5NU" urn="urn:adsk.eagle:package:35802206/2" type="model" library_version="3" library_locally_modified="yes">
 <packageinstances>
 <packageinstance name="EC2-5NU"/>
@@ -4678,14 +4709,14 @@ by exp-lbrs.ulp</description>
 </symbol>
 </symbols>
 <devicesets>
-<deviceset name="DPDT" urn="urn:adsk.eagle:component:35802178/7" prefix="K" uservalue="yes" library_version="7">
+<deviceset name="DPDT" urn="urn:adsk.eagle:component:35802178/8" prefix="K" uservalue="yes" library_version="8">
 <gates>
 <gate name="K" symbol="RELAY_COIL" x="0" y="0" addlevel="always"/>
 <gate name="-A" symbol="RELAY_SPDT_CONTACTS" x="17.78" y="0" swaplevel="1"/>
 <gate name="-B" symbol="RELAY_SPDT_CONTACTS" x="29.21" y="0" swaplevel="2"/>
 </gates>
 <devices>
-<device name="" package="EC2-5NU">
+<device name="-PTH" package="EC2-5NU">
 <connects>
 <connect gate="-A" pin="COM" pad="4"/>
 <connect gate="-A" pin="NC" pad="3"/>
@@ -4706,6 +4737,24 @@ by exp-lbrs.ulp</description>
 <attribute name="CONTAQCT-CURRENT" value="2A" constant="no"/>
 <attribute name="PN" value="EC2-5NU" constant="no"/>
 </technology>
+</technologies>
+</device>
+<device name="-SMD" package="EE2-5NU">
+<connects>
+<connect gate="-A" pin="COM" pad="4"/>
+<connect gate="-A" pin="NC" pad="3"/>
+<connect gate="-A" pin="NO" pad="5"/>
+<connect gate="-B" pin="COM" pad="9"/>
+<connect gate="-B" pin="NC" pad="10"/>
+<connect gate="-B" pin="NO" pad="8"/>
+<connect gate="K" pin="+" pad="1"/>
+<connect gate="K" pin="-" pad="12"/>
+</connects>
+<package3dinstances>
+<package3dinstance package3d_urn="urn:adsk.eagle:package:35848296/1"/>
+</package3dinstances>
+<technologies>
+<technology name=""/>
 </technologies>
 </device>
 </devices>
@@ -5406,7 +5455,7 @@ package type OT</description>
 <attribute name="PN" value="RC0603JR-074K7L"/>
 </part>
 <part name="SUPPLY19" library="My-Supply" library_urn="urn:adsk.eagle:library:35531236" deviceset="VBUS" device=""/>
-<part name="K1" library="My-Relays" library_urn="urn:adsk.eagle:library:35802173" deviceset="DPDT" device="" package3d_urn="urn:adsk.eagle:package:35802206/2"/>
+<part name="K1" library="My-Relays" library_urn="urn:adsk.eagle:library:35802173" deviceset="DPDT" device="-SMD" package3d_urn="urn:adsk.eagle:package:35848296/1" override_package3d_urn="urn:adsk.eagle:package:35848300/2" override_package_urn="urn:adsk.eagle:footprint:35848295/1"/>
 <part name="CN2" library="My-Connectors" library_urn="urn:adsk.eagle:library:35513533" deviceset="3P-" device="MINI-FIT-JR" package3d_urn="urn:adsk.eagle:package:35802278/2"/>
 <part name="SUPPLY23" library="My-Supply" library_urn="urn:adsk.eagle:library:35531236" deviceset="0V" device=""/>
 <part name="SUPPLY26" library="My-Supply" library_urn="urn:adsk.eagle:library:35531236" deviceset="0V" device=""/>
