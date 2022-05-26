@@ -1,4 +1,4 @@
-#define FIRMWARE_VERSION "1.9"
+#define FIRMWARE_VERSION "1.10"
 /*
 v1.0    - Initial release.
 v1.1    - Bug fix in task duration calcs.
@@ -26,6 +26,8 @@ v1.8.1 	- Now, Firebase_Get runs 'FirebaseReady' to ensure the connection in whi
 		- 'Firebase-ESP32' library updated from v3.3.0 to v3.2.2 (author's downgrade)
 v1.9 	- 'Firebase-ESP32' library updated from v3.2.2 to v3.3.2.
 		- Ensures that when task is RUNNING the /IoT_Device/Schedule shows status as RUNNING too.
+v1.10 	- 'Firebase-ESP32' library updated from v3.3.2 to v3.3.6.
+		- 'RTClib' library updated from v2.0.2 to v2.0.3.
 */
 
 /* Native libraries */
