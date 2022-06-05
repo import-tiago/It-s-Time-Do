@@ -1,4 +1,4 @@
-#define FIRMWARE_VERSION "1.10"
+#define FIRMWARE_VERSION "1.11"
 /*
 v1.0    - Initial release.
 v1.1    - Bug fix in task duration calcs.
@@ -28,6 +28,8 @@ v1.9 	- 'Firebase-ESP32' library updated from v3.2.2 to v3.3.2.
 		- Ensures that when task is RUNNING the /IoT_Device/Schedule shows status as RUNNING too.
 v1.10 	- 'Firebase-ESP32' library updated from v3.3.2 to v3.3.6.
 		- 'RTClib' library updated from v2.0.2 to v2.0.3.
+v1.11 	- 'Firebase-ESP32' library updated from v3.3.6 to v4.0.0.
+		- 'download_buffer_size' increased.
 */
 
 /* Native libraries */

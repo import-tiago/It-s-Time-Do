@@ -134,7 +134,7 @@ void Firebase_Init() {
 	// Assign download buffer size in byte
 	// Data to be downloaded will read as multiple chunks with this size, to compromise between speed and memory used for buffering.
 	// The memory from external SRAM/PSRAM will not use in the TCP client internal rx buffer.
-	config.fcs.download_buffer_size = 4096;
+	config.fcs.download_buffer_size = 1048576; // 1MB
 
 	Firebase.begin(&config, &auth);
 
