@@ -1,4 +1,4 @@
-#define FIRMWARE_VERSION "1.11"
+#define FIRMWARE_VERSION "1.12"
 /*
 v1.0    - Initial release.
 v1.1    - Bug fix in task duration calcs.
@@ -30,6 +30,7 @@ v1.10 	- 'Firebase-ESP32' library updated from v3.3.2 to v3.3.6.
 		- 'RTClib' library updated from v2.0.2 to v2.0.3.
 v1.11 	- 'Firebase-ESP32' library updated from v3.3.6 to v4.0.0.
 		- 'download_buffer_size' increased.
+v1.12 	- Fixed espressif32 platform at v3.5.0 because mbedtls (associated function) seems to have broken a bunch of libraries using it at new versions.
 */
 
 /* Native libraries */
