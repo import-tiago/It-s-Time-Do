@@ -31,6 +31,7 @@ v1.10 	- 'Firebase-ESP32' library updated from v3.3.2 to v3.3.6.
 v1.11 	- 'Firebase-ESP32' library updated from v3.3.6 to v4.0.0.
 		- 'download_buffer_size' increased.
 v1.12 	- Fixed espressif32 platform at v3.5.0 because mbedtls (associated function) seems to have broken a bunch of libraries using it at new versions.
+v1.13 	- 'Firebase-ESP32' library updated from v4.0.0 to v4.1.0.
 */
 
 /* Native libraries */

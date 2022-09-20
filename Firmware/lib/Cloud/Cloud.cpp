@@ -136,6 +136,8 @@ void Firebase_Init() {
 	// The memory from external SRAM/PSRAM will not use in the TCP client internal rx buffer.
 	config.fcs.download_buffer_size = 1048576; // 1MB
 
+	fbdo.setResponseSize(4096);
+
 	Firebase.begin(&config, &auth);
 
 	Firebase.reconnectWiFi(true);
