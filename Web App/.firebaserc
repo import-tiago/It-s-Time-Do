@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "its-time-do"
-  }
+    "default": "it-stime-do-984b5",
+    "e.g. staging": "it-stime-do-984b5"
+  },
+  "targets": {}
 }
