@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-html, body {
+html,
+body {
   background-color: #111927;
-  font-family: 'Roboto', 'Helvetica', sans-serif;
+  font-family: "Roboto", "Helvetica", sans-serif;
 }
 
 #mycard {
-  display: none;
+  display: flex;
   flex-direction: column;
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
@@ -28,13 +29,17 @@ html, body {
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.125);
 }
-
-#signInItem{
-  display:  block;;
+@media only screen and (min-width: 900px) {
+  #mycard {
+    width: 50%;
+  }
 }
-#signOutItem{
+#signInItem {
+  display: block;
+}
+#signOutItem {
   display: none;
 }
 #loggedUser {
-  display: flex;
+  display: none;
 }
