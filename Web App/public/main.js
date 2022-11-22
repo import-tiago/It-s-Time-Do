@@ -33,23 +33,27 @@ function Demo() {
   document.addEventListener(
     "DOMContentLoaded",
     function () {
+      this.containerSchedule = document.getElementById("containerSchedule");
+      this.timeSchedule = document.getElementById("timeSchedule");
+      this.modeSchedule = document.getElementById(
+        "modeSchedule"
+      );
       this.logged = document.getElementById("loggedUser");
       this.loginCard = document.getElementById("mycard");
       this.selectedMode = document.getElementById("selectMode");
       this.signOutButton = document.getElementById("signOutItem");
       this.signInItem = document.getElementById("signInItem");
-      this.shedulleItem = document.getElementById("shedulleItem");
+      this.scheduleItem = document.getElementById("scheduleItem");
 
-      this.SheduleButton = document.getElementById("shedulleButton");
+      this.ScheduleButton = document.getElementById("scheduleButton");
+      this.CancelScheduleButton = document.getElementById("cancelScheduleButton");
 
       this.ListWashes = document.getElementById("listWashes");
 
       this.signInButton = document.getElementById("sigInButton");
 
       this.nameContainer = document.getElementById("demo-name-container");
-      this.fcmErrorContainer = document.getElementById(
-        "demo-fcm-error-container"
-      );
+      this.fcmErrorContainer = document.getElementById("demo-fcm-error-container");
       this.deleteButton = document.getElementById("demo-delete-button");
       this.signedOutCard = document.getElementById("demo-signed-out-card");
       this.signedInCard = document.getElementById("demo-signed-in-card");
@@ -58,13 +62,14 @@ function Demo() {
       this.snackbar = document.getElementById("demo-snackbar");
 
       // Bind events.
-      this.SheduleButton.addEventListener("click", this.sheduleEvent.bind());
+      this.ScheduleButton.addEventListener("click", this.scheduleEvent.bind());
+      this.CancelScheduleButton.addEventListener("click",this.CancelScheduleEvent.bind());
       this.signInButton.addEventListener("click", this.signIn.bind(this));
       this.signOutButton.addEventListener("click", this.signOut.bind(this));
       listModes.forEach((element) => {
         let child = document.createElement("option");
         child.innerHTML = element.mode;
-        child.setAttribute("id", element.id);
+        child.setAttribute("value", element.id);
         this.selectedMode.appendChild(child);
       });
 
@@ -92,18 +97,19 @@ Demo.prototype.onAuthStateChanged = function (user) {
   if (user) {
     this.saveToken();
     this.getWashingMachine();
+    this.getSchedule();
     //this.displayAllUsers();
     this.loginCard.style.display = "none";
     this.signInItem.classList.remove("active");
-    this.shedulleItem.classList.add("active");
+    this.scheduleItem.classList.add("active");
     this.signOutButton.style.display = "block";
     this.signInItem.style.display = "none";
     this.logged.style.display = "block";
-    window.alert(user);
+    //window.alert(user);
   } else {
     this.loginCard.style.display = "flex";
     this.signInItem.classList.add("active");
-    this.shedulleItem.classList.remove("active");
+    this.scheduleItem.classList.remove("active");
     this.signOutButton.style.display = "none";
     this.signInItem.style.display = "block";
     this.logged.style.display = "none";
@@ -235,7 +241,29 @@ Demo.prototype.requestPermission = function () {
       console.error("Unable to get permission to notify.", err);
     });
 };
-
+Demo.prototype.getSchedule = function () {
+  var schedule = firebase.database().ref("IoT_Device/Schedule");
+  schedule.on("value", (snapshot) => {
+    const data = snapshot.val();
+    if ( !data ) return;
+    if ( data == "FREE" )
+    {
+      this.containerSchedule.style.display = "none";
+      return;
+    }
+    this.containerSchedule.style.display = "flex";
+    this.timeSchedule.innerHTML = `${data} Hrs`;
+  
+    var mode = firebase.database().ref("IoT_Device/Mode");
+    mode.on("value", (snapshot) => {
+      const data = snapshot.val();
+      if ( !data || data == "NULL" ) return;
+      var item = listModes.find(mode => mode.id == data)
+      console.log(item.mode)
+     this.modeSchedule.innerHTML = item.mode;
+    });
+  } );
+};
 Demo.prototype.getWashingMachine = function () {
   var washes = firebase.database().ref("Washing_Machine/Last_Task");
   washes.on("value", (snapshot) => {
@@ -303,13 +331,25 @@ Demo.prototype.updateListWashes = function (data) {
   }
 };
 
-Demo.prototype.sheduleEvent = function () {
-  var time = document.getElementById("timeShedule").value;
+Demo.prototype.CancelScheduleEvent = function () {
+  var updates = {};
+  updates["/IoT_Device/Schedule"] = "FREE";
+  updates["/IoT_Device/Mode"] = "NULL";
+  firebase.database().ref().update( updates );
+  this.containerSchedule.style.display = "none";
+};
+Demo.prototype.scheduleEvent = function () {
+  var time = document.getElementById("timeToSchedule");
+  var mode = document.getElementById("selectMode");
   console.log("agendarmento click");
   console.log(time);
 
   var updates = {};
-  updates["/IoT_Device/Schedule"] = time;
-  firebase.database().ref().update(updates);
+  updates["/IoT_Device/Schedule"] = time.value;
+  updates["/IoT_Device/Mode"] = mode.value;
+  
+  firebase.database().ref().update( updates );
+  time.value = time.defaultValue;
+  mode.value = 0
 };
 window.demo = new Demo();

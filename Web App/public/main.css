@@ -13,6 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/maps";
+@import "bootstrap/scss/mixins";
+@import "bootstrap/scss/utilities";
 
 html,
 body {
@@ -21,7 +26,7 @@ body {
 }
 
 #mycard {
-  display: flex;
+  display: none;
   flex-direction: column;
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
@@ -30,8 +35,21 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.125);
 }
 @media only screen and (min-width: 900px) {
+  #loggedUser,
   #mycard {
     width: 50%;
+  }
+}
+@media only screen and (min-width: 1600px) {
+  #loggedUser,
+  #mycard {
+    width: 40%;
+  }
+}
+@media only screen and (min-width: 2000px) {
+  #loggedUser,
+  #mycard {
+    width: 30%;
   }
 }
 #signInItem {
@@ -41,5 +59,8 @@ body {
   display: none;
 }
 #loggedUser {
+  display: flex;
+}
+#containerSchedule {
   display: none;
 }
