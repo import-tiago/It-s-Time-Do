@@ -13,72 +13,54 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/maps";
+@import "bootstrap/scss/mixins";
+@import "bootstrap/scss/utilities";
 
-html, body {
-  font-family: 'Roboto', 'Helvetica', sans-serif;
+html,
+body {
+  background-color: #111927;
+  font-family: "Roboto", "Helvetica", sans-serif;
 }
-.mdl-grid {
-  max-width: 1024px;
-  margin: auto;
+
+#mycard {
+  display: none;
+  flex-direction: column;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  background-color: rgba(17, 25, 40, 0.75);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.125);
 }
-.mdl-card {
-  min-height: 0;
-  padding-bottom: 5px;
+@media only screen and (min-width: 900px) {
+  #loggedUser,
+  #mycard {
+    width: 50%;
+  }
 }
-.mdl-layout__header-row {
-  padding: 0;
+@media only screen and (min-width: 1600px) {
+  #loggedUser,
+  #mycard {
+    width: 40%;
+  }
 }
-h3 {
-  background: url('logo.png') no-repeat;
-  background-size: 40px;
-  padding-left: 50px;
+@media only screen and (min-width: 2000px) {
+  #loggedUser,
+  #mycard {
+    width: 30%;
+  }
 }
-#demo-signed-out-card,
-#demo-signed-in-card {
+#signInItem {
+  display: block;
+}
+#signOutItem {
   display: none;
 }
-#demo-profile-pic {
-  height: 60px;
-  width: 60px;
-  border-radius: 30px;
-  margin-left: calc(50% - 30px);
-  margin-top: 10px;
+#loggedUser {
+  display: flex;
 }
-#demo-name-container {
-  font-weight: bold;
-}
-#demo-fcm-error-container {
-  margin-bottom: 20px;
-}
-#demo-delete-button {
-  margin-left: 20px;
-}
-#demo-all-users-list {
-  margin-bottom: -5px;
-}
-.demo-user-container {
-  position: relative;
-}
-.demo-user-container:HOVER {
-  background-color: #eee;
-}
-.demo-profile-pic {
-  height: 50px;
-  width: 50px;
-}
-.demo-name {
-  margin-left: 15px;
-}
-.mdl-switch {
-  display: inline-block;
-  right: 0;
-  position: absolute;
-  width: auto;
-  padding-right: 40px;
-  top: 13px;
-}
-.demo-notifications-enabled {
-  color: #aaa;
-  font-size: 80%;
+#containerSchedule {
   display: none;
 }
