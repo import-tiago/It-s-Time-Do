@@ -1,12 +1,11 @@
 #ifndef HAL_BOARD_H
 #define HAL_BOARD_H
 
-#include <Arduino.h>
+#include <M5StickCPlus.h>
 
-#define WASHING_MACHINE_POWER_LED 36 // SENSOR VP
-#define RELAY 23
+#define WASHING_MACHINE_POWER_LED 33
+#define RELAY 32
 
-// PROTOTYPES
 void Board_Pins_Init();
 
 #endif // HAL_BOARD_H

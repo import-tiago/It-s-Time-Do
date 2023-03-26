@@ -1,22 +1,9 @@
 {
-    "files.associations": {
-        "array": "cpp",
-        "deque": "cpp",
-        "string": "cpp",
-        "unordered_map": "cpp",
-        "unordered_set": "cpp",
-        "vector": "cpp",
-        "initializer_list": "cpp",
-        "*.tcc": "cpp",
-        "functional": "cpp",
-        "fstream": "cpp",
-        "istream": "cpp",
-        "ostream": "cpp",
-        "sstream": "cpp",
-        "streambuf": "cpp",
-        "system_error": "cpp",
-        "tuple": "cpp",
-        "algorithm": "cpp"
-    },
-    "C_Cpp.vcFormat.indent.caseLabels": true
+	"cmake.sourceDirectory": "${workspaceFolder}/.pio/libdeps/m5stick-c/M5StickCPlus",
+	"files.associations": {
+		"*.ulp": "cpp",
+		"array": "cpp",
+		"string": "cpp",
+		"string_view": "cpp"
+	}
 }

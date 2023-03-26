@@ -1,17 +1,26 @@
-#include <Arduino.h>
 #include "Main_Application.h"
-#include "Board_Pins.h"
-#include "Cloud.h"
-#include "DS3231.h"
 
 struct Task_Parameters Task;
 SystemStates Current_System_State = STARTING;
 
-void Remote_Start_Washing_Machine() {
+bool wifi_connected = false;
 
-	digitalWrite(RELAY, HIGH);
-	delay(300);
+void trigger_output() {
+
+	pinMode(RELAY, OUTPUT);
 	digitalWrite(RELAY, LOW);
+	delay(300);
+	pinMode(RELAY, INPUT_PULLUP);
+
+	M5.Beep.beep();
+	delay(50);
+	M5.Beep.mute();
+	delay(50);
+}
+
+void Start_Task() {
+
+	trigger_output();
 
 	if (!Wait_Washing_Machine_Initialize()) {
 
@@ -33,16 +42,20 @@ void Remote_Start_Washing_Machine() {
 bool Wait_Washing_Machine_Initialize() {
 
 	bool fail = false;
-	uint8_t Task_Fail_Monitor = 0;
-	const uint8_t TASK_FAIL_TIMEOUT = 20;
+	uint8_t timeout = 10;
 
 	Washing_Machine.Initializing = true;
 
 	do {
-		Serial.println("Waiting LED power on...");
-		delay(500);
 
-		if (Task_Fail_Monitor >= TASK_FAIL_TIMEOUT) {
+		TFT_Clear();
+		TFT_Wait_Task_Initialize_Screen(timeout);
+		TFT_Print();
+
+		Serial.println("Waiting LED power on...");
+		delay(1000);
+
+		if (!--timeout) {
 			fail = true;
 			Serial.print("task init fail!");
 			JSON.set("/START", Washing_Machine.FAIL);
@@ -50,7 +63,6 @@ bool Wait_Washing_Machine_Initialize() {
 			Send_Web_Push_Notification(Push_Notification.fail.TASK_FAIL);
 		}
 
-		Task_Fail_Monitor++;
 	} while (!Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED) && !fail);
 
 	Washing_Machine.Initializing = false;
@@ -96,13 +108,13 @@ String Task_Duration_Calc(uint32_t init_timestamp, uint32_t end_timestamp) {
 
 bool Get_Washing_Machine_Power_State(int pin) {
 
-	const uint16_t SAMPLES = 255;
-	uint32_t mean = 0;
+	const uint16_t SAMPLES = 256;
+	float mean_voltage = 0;
 
 	for (uint16_t i = 0; i < SAMPLES; i++)
-		mean += analogRead(pin);
+		mean_voltage += analogReadMilliVolts(pin) / 1000.0F;
 
-	mean /= SAMPLES;
+	mean_voltage /= SAMPLES;
 
-	return (mean >= 220) ? true : false; // 220 in AD value  is ~0.7V (minimum drop voltage in a diode/LED)
+	return (mean_voltage >= VOLTAGE_DROP_LED) ? true : false;
 }

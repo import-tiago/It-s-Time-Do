@@ -1,12 +1,11 @@
 #include "Board_Pins.h"
-#include <Arduino.h>
 
 void Board_Pins_Init() {
 
-	Serial.begin(115200);
+	M5.begin();
 
-	pinMode(RELAY, OUTPUT);
-	pinMode(WASHING_MACHINE_POWER_LED, INPUT);
+	pinMode(WASHING_MACHINE_POWER_LED, INPUT_PULLDOWN);
+	pinMode(RELAY, INPUT_PULLUP);
 
-	digitalWrite(RELAY, LOW);
+	delay(2000);
 }

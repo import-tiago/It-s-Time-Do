@@ -1,7 +1,18 @@
 #ifndef MAIN_APPLICATION_H
 #define MAIN_APPLICATION_H
 
-#include <Arduino.h>
+#include <M5StickCPlus.h>
+#include "MY_RTC.h"
+#include "Board_Pins.h"
+#include "Cloud.h"
+#include "Display.h"
+
+#define VOLTAGE_DROP_LED 2.00F
+
+extern int8_t next_task_hour;
+extern int8_t next_task_min;
+
+extern bool wifi_connected;
 
 typedef enum {
 
@@ -11,7 +22,9 @@ typedef enum {
 
 	DESERIALIZE_JSON_DATA,
 
-	REMOTE_TRIGGER_MONITOR,
+	SCHEDULED_TRIGGER_MONITOR,
+
+	LOCAL_SCHEDULE_ADJUSTMENT,
 
 	LOCAL_TRIGGER_MONITOR,
 
@@ -41,7 +54,7 @@ struct Task_Parameters {
 
 extern struct Task_Parameters Task;
 
-void Remote_Start_Washing_Machine();
+void Start_Task();
 bool Wait_Washing_Machine_Initialize();
 void Get_Task_Initialization_Parameters();
 void Get_Task_Finalization_Parameters();

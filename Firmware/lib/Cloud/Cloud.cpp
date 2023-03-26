@@ -1,9 +1,9 @@
 #include "Cloud.h"
 #include "Firebase_Secrets.h"
-#include "My_Persistent_Data.h"
-#include "OLED.h"
+//#include "My_Persistent_Data.h"
+//#include "OLED.h"
 #include <Arduino.h>
-#include <TridentTD_ESP32NVS.h>
+//#include <TridentTD_ESP32NVS.h>
 #include <Firebase_ESP_Client.h>
 #include <addons/TokenHelper.h> //Provide the token generation process info.
 #include <addons/RTDBHelper.h> //Provide the RTDB payload printing info and other helper functions.
@@ -50,7 +50,7 @@ void fcsDownloadCallback(FCS_DownloadStatusInfo info) {
 	}
 	else if (info.status == fb_esp_fcs_download_status_download) {
 		Serial.printf("Downloaded %d%s\n", (int)info.progress, "%");
-		OLED_OTA_Progress((int)info.progress);
+		//	OLED_OTA_Progress((int)info.progress);
 	}
 	else if (info.status == fb_esp_fcs_download_status_complete) {
 		Serial.println("Update firmware completed.");
@@ -72,7 +72,7 @@ void Download_New_Firmware_by_OTA() {
 
 void Checks_OTA_Firmware_Update() {
 
-	Display_Check_OTA_Firmware_Update();
+	//Display_Check_OTA_Firmware_Update();
 
 	Serial.println("Check_OTA_Firmware_Update");
 
@@ -89,33 +89,33 @@ void Checks_OTA_Firmware_Update() {
 
 			sprintf(New_Firmware_Version, String(meta.downloadTokens.c_str()).c_str());
 
-			Flash_Memory_Read_Variables();
+			//Flash_Memory_Read_Variables();
 
 			Serial.print("LOCAL  Firmware Token: ");
 
-			Serial.println(String((char*)NVS.getObject("FW")).c_str());
+			//Serial.println(String((char*)NVS.getObject("FW")).c_str());
 
 			Serial.print("SERVER Firmware Token: ");
 
 			Serial.println(New_Firmware_Version);
 
-			if (strcmp(String((char*)NVS.getObject("FW")).c_str(), New_Firmware_Version) != 0) {
+			/* 			if (strcmp(String((char*)NVS.getObject("FW")).c_str(), New_Firmware_Version) != 0) {
 
-				Serial.println("New firmware version available");
+							Serial.println("New firmware version available");
 
-				NVS.setObject("FW", &New_Firmware_Version, sizeof(New_Firmware_Version));
+							NVS.setObject("FW", &New_Firmware_Version, sizeof(New_Firmware_Version));
 
-				Download_New_Firmware_by_OTA();
+							Download_New_Firmware_by_OTA();
 
-			}
-			else
-				Serial.println("Firmware no needs update.");
+						}
+						else
+							Serial.println("Firmware no needs update."); */
 		}
 	}
 }
 
 void Firebase_Init() {
-	Display_Firebase_Connecting();
+	//Display_Firebase_Connecting();
 	Serial.printf("Firebase Client v%s\n\n", FIREBASE_CLIENT_VERSION);
 
 	// Assign the api key (required)

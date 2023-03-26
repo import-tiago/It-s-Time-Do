@@ -1,9 +1,13 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
-#include <Arduino.h>
+#include <M5StickCPlus.h>
+#include "Free_Fonts.h"
+#include <WiFi.h>
 
-// PROTOTYPES
-void WiFi_Init();
+#include "WiFi_Secrets.h"
+#include "Display.h"
+
+bool WiFi_Init();
 
 #endif // NETWORK_H
