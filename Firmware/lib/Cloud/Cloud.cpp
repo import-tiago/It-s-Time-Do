@@ -95,6 +95,7 @@ void Checks_OTA_Firmware_Update() {
 
 			//Serial.println(String((char*)NVS.getObject("FW")).c_str());
 
+			Serial.println();
 			Serial.print("SERVER Firmware Token: ");
 
 			Serial.println(New_Firmware_Version);
@@ -162,8 +163,10 @@ bool Get_Firebase_JSON_at(String Database_Path, FirebaseJson* json) {
 
 	if (Firebase.ready()) {
 
-		if (Firebase.RTDB.getJSON(&fbdo, "/", json))
+		if (Firebase.RTDB.getJSON(&fbdo, Database_Path, json)) {
+			json->toString(Serial, true);
 			return true;
+		}
 		else
 			Serial.println(fbdo.errorReason().c_str());
 	}
@@ -188,7 +191,6 @@ void Extract_List_of_Web_Push_Notifications_Device_Tokens() {
 		for (size_t i = 0; i < count; i++) {
 			FirebaseJson::IteratorValue value = JSON_Tokens.valueAt(i);
 			sprintf(&Push_Notification.Device_Tokens[i][0], value.key.c_str());
-			//Serial.println(value.key.c_str());
 		}
 
 		JSON_Tokens.iteratorEnd(); // required for free the used memory in iteration

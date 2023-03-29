@@ -35,7 +35,7 @@ void Start_Task() {
 		Current_System_State = TASK_STATUS_MONITOR;
 	}
 	else
-		Current_System_State = SET_CLOUD_JSON;
+		Current_System_State = SET_CLOUD_DATA;
 
 }
 

@@ -263,8 +263,8 @@ void setup() {
 	TFT_Init();
 
 	if (WiFi_Init()) {
-		//Firebase_Init();
-		//Checks_OTA_Firmware_Update();
+		Firebase_Init();
+		Checks_OTA_Firmware_Update();
 	}
 
 	//Set_RTC(__DATE__, __TIME__);
@@ -304,7 +304,6 @@ void System_States_Manager() {
 
 				TFT_Print();
 
-				//Current_System_State = GET_CLOUD_JSON_DATA;
 				Current_System_State = LOCAL_TRIGGER_MONITOR;
 				break;
 			}
@@ -325,8 +324,6 @@ void System_States_Manager() {
 				Current_System_State = SCHEDULED_TRIGGER_MONITOR;
 				break;
 			}
-
-
 
 		case SCHEDULED_TRIGGER_MONITOR: {
 
@@ -366,103 +363,103 @@ void System_States_Manager() {
 					Send_Web_Push_Notification(Push_Notification.end.TASK_FINISH);
 				}
 
-				//Current_System_State = SET_CLOUD_JSON;
-				Current_System_State = LOCAL_SCHEDULE_ADJUSTMENT;
+				Current_System_State = GET_CLOUD_DATA;
+				//Current_System_State = LOCAL_SCHEDULE_ADJUSTMENT;
 				break;
 			}
-								/* 		case GET_CLOUD_JSON_DATA: {
 
-											JSON.clear();
+		case GET_CLOUD_DATA: {
 
-											if (Get_Firebase_JSON_at("/", &JSON))
-												Current_System_State = DESERIALIZE_JSON_DATA;
+				static uint32_t t0 = 0;
 
-											break;
-										} */
+				if ((millis() - t0) >= 30000) {
 
-										/* 		case DESERIALIZE_JSON_DATA: {
+					t0 = millis();
 
-														Extract_List_of_Web_Push_Notifications_Device_Tokens();
+					if (Firebase.RTDB.getString(&fbdo, F("/START"))) {
 
-														JSON_Deserialized.clear();
+						String time = fbdo.to<const char*>();
 
-														JSON.get(JSON_Deserialized, "/START");
+						Serial.printf("NEXT SCHEDULED TASK: %s\r\n", time);
 
-														JSON.remove("/START");
+						if (isValid_Time(time)) {
 
-														if (JSON_Deserialized.success) {
+							Next_Task = time;
 
-															String hour = JSON_Deserialized.to<String>();
-
-															if (isValid_Time(hour)) {
-
-																Next_Task = hour;
-																Current_System_State = SCHEDULED_TRIGGER_MONITOR;
-															}
-															else {
-
-																if (!Task.running)
-																	Next_Task = Washing_Machine.FREE;
-
-																Current_System_State = LOCAL_TRIGGER_MONITOR;
-															}
-														}
-														else
-															Current_System_State = GET_CLOUD_JSON_DATA;
-
-														break;
-													} */
-
-
-
-		case SET_CLOUD_JSON: {
-
-				/* 											JSON.clear();
-
-							while (!Get_Firebase_JSON_at("/", &JSON)) {
-								;
+							JSON.clear();
+							if (Get_Firebase_JSON_at("/Notification_Tokens", &JSON)) {
+								Extract_List_of_Web_Push_Notifications_Device_Tokens();
+								JSON_Deserialized.clear();
 							}
 
-							JSON.remove("/START");
+							Current_System_State = SCHEDULED_TRIGGER_MONITOR;
+						}
+						else {
 
-							do {
-								JSON.set("/IoT_Device/Calendar", Current_Date(FULL));
-								JSON.set("/IoT_Device/Clock", Current_Clock(WITHOUT_SECONDS));
-								JSON.set("/IoT_Device/Schedule", Next_Task);
-								JSON.set("/IoT_Device/Firmware_Version", FIRMWARE_VERSION);
+							if (!Task.running)
+								Next_Task = Washing_Machine.FREE;
 
-								JSON.set("/Washing_Machine/State", Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED) ? "ON" : "OFF");
+							Current_System_State = LOCAL_TRIGGER_MONITOR;
+						}
+					}
+					else {
+						Serial.println(fbdo.errorReason().c_str());
+						Current_System_State = SET_CLOUD_DATA;
+					}
+				}
 
-								if (Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED))
-									JSON.set("/START", Washing_Machine.WORKING);
-
-								if (Task.new_report) {
-
-									Task.new_report = false;
-									Task.running = false;
-
-									char path[100] = { 0 };
-
-									JSON.set("/START", Washing_Machine.FREE);
-
-									siprintf(path, "/Washing_Machine/Last_Task/%s/%s/Finish", Task.initial_date.c_str(), Task.initial_time.c_str());
-									JSON.set(path, Task.finished_time);
-
-									siprintf(path, "/Washing_Machine/Last_Task/%s/%s/Mode", Task.initial_date.c_str(), Task.initial_time.c_str());
-									JSON.set(path, Washing_Machine.washing_mode);
-
-									siprintf(path, "/Washing_Machine/Last_Task/%s/%s/Duration", Task.initial_date.c_str(), Task.initial_time.c_str());
-									JSON.set(path, Task.duration);
-
-								}
-
-							} while (!Set_Firebase_JSON_at("/", &JSON));
-
-							Current_System_State = DISPLAY_UPDATE; */
-				Current_System_State = LOCAL_SCHEDULE_ADJUSTMENT;
+				Current_System_State = SET_CLOUD_DATA;
 
 				break;
 			}
 
+		case SET_CLOUD_DATA: {
+
+				/*
+				JSON.clear();
+
+				JSON.remove("/START");
+
+				do {
+					JSON.set("/IoT_Device/Calendar", Current_Date(FULL));
+					JSON.set("/IoT_Device/Clock", Current_Clock(WITHOUT_SECONDS));
+					JSON.set("/IoT_Device/Schedule", Next_Task);
+					JSON.set("/IoT_Device/Firmware_Version", FIRMWARE_VERSION);
+
+					JSON.set("/Washing_Machine/State", Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED) ? "ON" : "OFF");
+
+					if (Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED))
+						JSON.set("/START", Washing_Machine.WORKING);
+
+					if (Task.new_report) {
+
+						Task.new_report = false;
+						Task.running = false;
+
+						char path[100] = { 0 };
+
+						JSON.set("/START", Washing_Machine.FREE);
+
+						siprintf(path, "/Washing_Machine/Last_Task/%s/%s/Finish", Task.initial_date.c_str(), Task.initial_time.c_str());
+						JSON.set(path, Task.finished_time);
+
+						siprintf(path, "/Washing_Machine/Last_Task/%s/%s/Mode", Task.initial_date.c_str(), Task.initial_time.c_str());
+						JSON.set(path, Washing_Machine.washing_mode);
+
+						siprintf(path, "/Washing_Machine/Last_Task/%s/%s/Duration", Task.initial_date.c_str(), Task.initial_time.c_str());
+						JSON.set(path, Task.duration);
+					}
+
+					if (Next_Task == Washing_Machine.FAIL) {
+						JSON.set("/START", Washing_Machine.FAIL);
+					}
+
+				} while (!Set_Firebase_JSON_at("/", &JSON));
+				*/
+
+				Current_System_State = LOCAL_SCHEDULE_ADJUSTMENT;
+
+				break;
+			}
 	}
 }
