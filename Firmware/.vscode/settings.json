@@ -4,6 +4,13 @@
 		"*.ulp": "cpp",
 		"array": "cpp",
 		"string": "cpp",
-		"string_view": "cpp"
+		"string_view": "cpp",
+		"*.tcc": "cpp",
+		"deque": "cpp",
+		"list": "cpp",
+		"unordered_map": "cpp",
+		"unordered_set": "cpp",
+		"vector": "cpp",
+		"system_error": "cpp"
 	}
 }

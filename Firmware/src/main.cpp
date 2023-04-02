@@ -40,10 +40,7 @@ v2.0    - Porting whole firmware to a new hardware platform: M5StickC Plus.
 #include "Free_Fonts.h"
 
 /* Own libraries */
-//#include "Board_Pins.h"
-//#include "Cloud.h"
 #include "Firebase_Secrets.h"
-//#include "My_Persistent_Data.h"
 #include "Network.h"
 #include "WiFi_Secrets.h"
 #include "Main_Application.h"
@@ -51,6 +48,87 @@ v2.0    - Porting whole firmware to a new hardware platform: M5StickC Plus.
 #include "Display.h"
 #include "Board_Pins.h"
 
+#include "soc/rtc_wdt.h"
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+
+void Download_Cloud_Data() {
+
+	if (Firebase.RTDB.getString(&fbdo, F("/START"))) {
+
+		String time = fbdo.to<const char*>();
+
+		if (isValid_Time(time)) {
+
+			Next_Task = time;
+
+			/* 			JSON.clear();
+						if (Get_Firebase_JSON_at("/Notification_Tokens", &JSON)) {
+							Extract_List_of_Web_Push_Notifications_Device_Tokens();
+							JSON_Deserialized.clear();
+						} */
+		}
+		else {
+			if (!Task.running)
+				Next_Task = Washing_Machine.FREE;
+		}
+	}
+	else
+		Serial.println(fbdo.errorReason().c_str());
+}
+
+void Upload_Cloud_Data() {
+
+	FirebaseJson json;
+
+	json.add(F("/IoT_Device/Calendar"), Current_Date(FULL));
+	json.add(F("/IoT_Device/Clock"), Current_Clock(WITHOUT_SECONDS));
+	json.add(F("/IoT_Device/Schedule"), Next_Task);
+	json.add(F("/IoT_Device/Firmware_Version"), FIRMWARE_VERSION);
+
+	json.add(F("/Washing_Machine/State"), Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED) ? "ON" : "OFF");
+
+	if (Next_Task == Washing_Machine.FAIL)
+		json.add(F("/START"), Washing_Machine.FAIL);
+	else if (Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED))
+		json.add(F("/START"), Washing_Machine.WORKING);
+
+
+	if (Task.new_report) {
+		Task.new_report = false;
+		Task.running = false;
+
+		json.add(F("/START"), Washing_Machine.FREE);
+
+		char data[100] = { 0 };
+
+		siprintf(data, "/Washing_Machine/Last_Task/%s/%s/Finish", Task.initial_date.c_str(), Task.initial_time.c_str());
+		json.add(data, Task.finished_time);
+
+		siprintf(data, "/Washing_Machine/Last_Task/%s/%s/Mode", Task.initial_date.c_str(), Task.initial_time.c_str());
+		json.add(data, Washing_Machine.washing_mode);
+
+		siprintf(data, "/Washing_Machine/Last_Task/%s/%s/Duration", Task.initial_date.c_str(), Task.initial_time.c_str());
+		json.add(data, Task.duration);
+	}
+
+	Serial.printf("update node... %s\n", Firebase.RTDB.updateNode(&fbdo, F("/"), &json) ? "ok" : fbdo.errorReason().c_str());
+}
+
+void Firebase_Tasks(void* arg) {
+
+	while (1) {
+
+		static uint32_t t0 = 0;
+
+		if (Firebase.ready() && (millis() - t0 >= 15000 || !t0)) {
+			t0 = millis();
+
+			Upload_Cloud_Data();
+			Download_Cloud_Data();
+		}
+	}
+}
 
 void adjustment_monitor() {
 
@@ -153,8 +231,6 @@ void adjustment_monitor() {
 
 
 			// SCHEDULE ADJUSTMENT
-
-
 			if (blinky && adj_step == ADJ_MINS)
 				sprintf(target_clock, "%02d:%02d", hour, min);
 
@@ -264,13 +340,23 @@ void setup() {
 
 	if (WiFi_Init()) {
 		Firebase_Init();
-		Checks_OTA_Firmware_Update();
+		//Checks_OTA_Firmware_Update();
 	}
+
+	xTaskCreatePinnedToCore(
+		Firebase_Tasks,
+		"FirebaseTasks",
+		8192,
+		NULL,
+		1,
+		NULL,
+		1);
 
 	//Set_RTC(__DATE__, __TIME__);
 }
 
 void loop() {
+
 	System_States_Manager();
 }
 
@@ -280,186 +366,91 @@ void System_States_Manager() {
 
 		case STARTING: {
 
-				Next_Task = Washing_Machine.FREE;
+			Next_Task = Washing_Machine.FREE;
 
-				Current_System_State = LOCAL_SCHEDULE_ADJUSTMENT;
+			Current_System_State = LOCAL_SCHEDULE_ADJUSTMENT;
 
-				break;
-			}
+			break;
+		}
 
 		case LOCAL_SCHEDULE_ADJUSTMENT: {
-				adjustment_monitor();
-				Current_System_State = DISPLAY_UPDATE;
-				break;
-			}
+			adjustment_monitor();
+			Current_System_State = DISPLAY_UPDATE;
+			break;
+		}
 
 		case DISPLAY_UPDATE: {
 
-				TFT_Clear();
+			TFT_Clear();
 
-				if (Task.running)
-					TFT_Build_Working_Screen(Task_Duration_Calc(Task.initial_timestamp, Get_Current_Timestamp()), FIRMWARE_VERSION);
-				else
-					TFT_Build_Home_Screen(Next_Task, FIRMWARE_VERSION);
+			if (Task.running)
+				TFT_Build_Working_Screen(Task_Duration_Calc(Task.initial_timestamp, Get_Current_Timestamp()), FIRMWARE_VERSION);
+			else
+				TFT_Build_Home_Screen(Next_Task, FIRMWARE_VERSION);
 
-				TFT_Print();
+			TFT_Print();
 
-				Current_System_State = LOCAL_TRIGGER_MONITOR;
-				break;
-			}
+			Current_System_State = LOCAL_TRIGGER_MONITOR;
+			break;
+		}
 
 		case LOCAL_TRIGGER_MONITOR: {
 
-				if (!Task.running && Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED)) {
+			if (!Task.running && Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED)) {
 
-					Next_Task = Washing_Machine.WORKING;
+				Next_Task = Washing_Machine.WORKING;
 
-					Task.running = true;
+				Task.running = true;
 
-					Get_Task_Initialization_Parameters();
+				Get_Task_Initialization_Parameters();
 
-					Send_Web_Push_Notification(Push_Notification.init.TASK_INIT);
-				}
-
-				Current_System_State = SCHEDULED_TRIGGER_MONITOR;
-				break;
+				//Send_Web_Push_Notification(Push_Notification.init.TASK_INIT);
 			}
+
+			Current_System_State = SCHEDULED_TRIGGER_MONITOR;
+			break;
+		}
 
 		case SCHEDULED_TRIGGER_MONITOR: {
 
-				int hour = Next_Task.substring(0, Next_Task.indexOf(":")).toInt();
-				int min = Next_Task.substring(Next_Task.indexOf(":") + 1).toInt();
-				const int sec = 0;
+			int hour = Next_Task.substring(0, Next_Task.indexOf(":")).toInt();
+			int min = Next_Task.substring(Next_Task.indexOf(":") + 1).toInt();
+			const int sec = 0;
 
-				int day = Current_Date(JUST_DAY).toInt();
-				int month = Current_Date(JUST_MONTH).toInt();
-				int year = Current_Date(JUST_YEAR).toInt();
+			int day = Current_Date(JUST_DAY).toInt();
+			int month = Current_Date(JUST_MONTH).toInt();
+			int year = Current_Date(JUST_YEAR).toInt();
 
-				uint32_t current_timestamp = Get_Current_Timestamp();
-				uint32_t schedule_timestamp = Calc_Timestamp(hour, min, sec, day, month, year);
+			uint32_t current_timestamp = Get_Current_Timestamp();
+			uint32_t schedule_timestamp = Calc_Timestamp(hour, min, sec, day, month, year);
 
-				if (((current_timestamp >= schedule_timestamp) && (current_timestamp <= (schedule_timestamp + 120))) && !Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED))
-					Start_Task();
-				else
-					Current_System_State = TASK_STATUS_MONITOR;
+			if (((current_timestamp >= schedule_timestamp) && (current_timestamp <= (schedule_timestamp + 120))) && !Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED))
+				Start_Task();
+			else
+				Current_System_State = TASK_STATUS_MONITOR;
 
-				break;
-			}
+			break;
+		}
 
 		case TASK_STATUS_MONITOR: {
 
-				if (Task.running && !Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED)) {
+			if (Task.running && !Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED)) {
 
-					Task.running = false;
+				Task.running = false;
 
-					Task.new_report = true;
+				Task.new_report = true;
 
-					Next_Task = Washing_Machine.FREE;
+				Next_Task = Washing_Machine.FREE;
 
-					Get_Task_Finalization_Parameters();
+				Get_Task_Finalization_Parameters();
 
-					Task.duration = Task_Duration_Calc(Task.initial_timestamp, Get_Current_Timestamp());
+				Task.duration = Task_Duration_Calc(Task.initial_timestamp, Get_Current_Timestamp());
 
-					Send_Web_Push_Notification(Push_Notification.end.TASK_FINISH);
-				}
-
-				Current_System_State = GET_CLOUD_DATA;
-				//Current_System_State = LOCAL_SCHEDULE_ADJUSTMENT;
-				break;
+				//Send_Web_Push_Notification(Push_Notification.end.TASK_FINISH);
 			}
 
-		case GET_CLOUD_DATA: {
-
-				static uint32_t t0 = 0;
-
-				if ((millis() - t0) >= 30000) {
-
-					t0 = millis();
-
-					if (Firebase.RTDB.getString(&fbdo, F("/START"))) {
-
-						String time = fbdo.to<const char*>();
-
-						Serial.printf("NEXT SCHEDULED TASK: %s\r\n", time);
-
-						if (isValid_Time(time)) {
-
-							Next_Task = time;
-
-							JSON.clear();
-							if (Get_Firebase_JSON_at("/Notification_Tokens", &JSON)) {
-								Extract_List_of_Web_Push_Notifications_Device_Tokens();
-								JSON_Deserialized.clear();
-							}
-
-							Current_System_State = SCHEDULED_TRIGGER_MONITOR;
-						}
-						else {
-
-							if (!Task.running)
-								Next_Task = Washing_Machine.FREE;
-
-							Current_System_State = LOCAL_TRIGGER_MONITOR;
-						}
-					}
-					else {
-						Serial.println(fbdo.errorReason().c_str());
-						Current_System_State = SET_CLOUD_DATA;
-					}
-				}
-
-				Current_System_State = SET_CLOUD_DATA;
-
-				break;
-			}
-
-		case SET_CLOUD_DATA: {
-
-				/*
-				JSON.clear();
-
-				JSON.remove("/START");
-
-				do {
-					JSON.set("/IoT_Device/Calendar", Current_Date(FULL));
-					JSON.set("/IoT_Device/Clock", Current_Clock(WITHOUT_SECONDS));
-					JSON.set("/IoT_Device/Schedule", Next_Task);
-					JSON.set("/IoT_Device/Firmware_Version", FIRMWARE_VERSION);
-
-					JSON.set("/Washing_Machine/State", Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED) ? "ON" : "OFF");
-
-					if (Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED))
-						JSON.set("/START", Washing_Machine.WORKING);
-
-					if (Task.new_report) {
-
-						Task.new_report = false;
-						Task.running = false;
-
-						char path[100] = { 0 };
-
-						JSON.set("/START", Washing_Machine.FREE);
-
-						siprintf(path, "/Washing_Machine/Last_Task/%s/%s/Finish", Task.initial_date.c_str(), Task.initial_time.c_str());
-						JSON.set(path, Task.finished_time);
-
-						siprintf(path, "/Washing_Machine/Last_Task/%s/%s/Mode", Task.initial_date.c_str(), Task.initial_time.c_str());
-						JSON.set(path, Washing_Machine.washing_mode);
-
-						siprintf(path, "/Washing_Machine/Last_Task/%s/%s/Duration", Task.initial_date.c_str(), Task.initial_time.c_str());
-						JSON.set(path, Task.duration);
-					}
-
-					if (Next_Task == Washing_Machine.FAIL) {
-						JSON.set("/START", Washing_Machine.FAIL);
-					}
-
-				} while (!Set_Firebase_JSON_at("/", &JSON));
-				*/
-
-				Current_System_State = LOCAL_SCHEDULE_ADJUSTMENT;
-
-				break;
-			}
+			Current_System_State = LOCAL_SCHEDULE_ADJUSTMENT;
+			break;
+		}
 	}
 }

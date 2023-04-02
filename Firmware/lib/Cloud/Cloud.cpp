@@ -1,9 +1,6 @@
 #include "Cloud.h"
 #include "Firebase_Secrets.h"
-//#include "My_Persistent_Data.h"
-//#include "OLED.h"
 #include <Arduino.h>
-//#include <TridentTD_ESP32NVS.h>
 #include <Firebase_ESP_Client.h>
 #include <addons/TokenHelper.h> //Provide the token generation process info.
 #include <addons/RTDBHelper.h> //Provide the RTDB payload printing info and other helper functions.
@@ -135,28 +132,30 @@ void Firebase_Init() {
 	// Assign download buffer size in byte
 	// Data to be downloaded will read as multiple chunks with this size, to compromise between speed and memory used for buffering.
 	// The memory from external SRAM/PSRAM will not use in the TCP client internal rx buffer.
-	config.fcs.download_buffer_size = 1048576; // 1MB
+	config.fcs.download_buffer_size = 2048; // 1MB
 
-	fbdo.setResponseSize(4096);
+	fbdo.setResponseSize(2048);
 
 	Firebase.begin(&config, &auth);
 
 	Firebase.reconnectWiFi(true);
 
-	Firebase.FCM.setServerKey(FIREBASE_FCM_SERVER_KEY);
+	config.timeout.serverResponse = 10 * 1000;
+
+	//Firebase.FCM.setServerKey(FIREBASE_FCM_SERVER_KEY);
 }
 
 bool Set_Firebase_JSON_at(String Database_Path, FirebaseJson* json) {
 
 	if (Firebase.ready()) {
 
-		if (Firebase.RTDB.updateNode(&fbdo, Database_Path, json))
-			return true;
-		else
-			Serial.println(fbdo.errorReason().c_str());
-	}
+	if (Firebase.RTDB.updateNode(&fbdo, Database_Path, json))
+		return true;
 	else
-		return false;
+		Serial.println(fbdo.errorReason());
+	}
+
+	return false;
 }
 
 bool Get_Firebase_JSON_at(String Database_Path, FirebaseJson* json) {
@@ -168,7 +167,7 @@ bool Get_Firebase_JSON_at(String Database_Path, FirebaseJson* json) {
 			return true;
 		}
 		else
-			Serial.println(fbdo.errorReason().c_str());
+			Serial.println(fbdo.errorReason());
 	}
 	else
 		return false;

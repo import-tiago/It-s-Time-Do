@@ -34,8 +34,8 @@ void Start_Task() {
 
 		Current_System_State = TASK_STATUS_MONITOR;
 	}
-	else
-		Current_System_State = SET_CLOUD_DATA;
+	//else
+	//	Current_System_State = LOCAL_SCHEDULE_ADJUSTMENT;
 
 }
 
