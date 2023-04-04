@@ -7,10 +7,9 @@ bool wifi_connected = false;
 
 void trigger_output() {
 
-	pinMode(RELAY, OUTPUT);
-	digitalWrite(RELAY, LOW);
+	digitalWrite(RELAY, HIGH);
 	delay(300);
-	pinMode(RELAY, INPUT_PULLUP);
+	digitalWrite(RELAY, LOW);
 
 	M5.Beep.beep();
 	delay(50);
@@ -36,7 +35,6 @@ void Start_Task() {
 	}
 	//else
 	//	Current_System_State = LOCAL_SCHEDULE_ADJUSTMENT;
-
 }
 
 bool Wait_Washing_Machine_Initialize() {

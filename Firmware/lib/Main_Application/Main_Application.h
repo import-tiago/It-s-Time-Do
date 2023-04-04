@@ -7,7 +7,7 @@
 #include "Cloud.h"
 #include "Display.h"
 
-#define VOLTAGE_DROP_LED 2.00F
+#define VOLTAGE_DROP_LED 0.70F
 
 extern int8_t next_task_hour;
 extern int8_t next_task_min;

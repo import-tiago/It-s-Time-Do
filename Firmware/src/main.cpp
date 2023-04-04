@@ -69,7 +69,7 @@ void Download_Cloud_Data() {
 						} */
 		}
 		else {
-			if (!Task.running)
+			if (!Task.running && Next_Task != Washing_Machine.FREE)
 				Next_Task = Washing_Machine.FREE;
 		}
 	}
@@ -90,6 +90,8 @@ void Upload_Cloud_Data() {
 
 	if (Next_Task == Washing_Machine.FAIL)
 		json.add(F("/START"), Washing_Machine.FAIL);
+	if (Next_Task != Washing_Machine.FREE)
+		json.add(F("/START"), Next_Task);
 	else if (Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED))
 		json.add(F("/START"), Washing_Machine.WORKING);
 
