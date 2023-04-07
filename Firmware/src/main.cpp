@@ -5,7 +5,7 @@ v1.1    - Bug fix in task duration calcs.
 v1.2    - Update library 'Firebase-ESP32' from  v3.1.5 to v3.2.0.
 v1.3    - Reading and writing data from/to server changed to JSON method.
 		- More information besides 'task duration' added to the finished task log.
-		- New data struct standard defined to store data in the real time database.
+		- New data struct standard defined to store data in the real remote_time_adj database.
 		- Print current task duration while waits the task finish.
 		- Allows task duration monitor/log works from local or remote START trigger.
 v1.4    - Enable Checks_OTA_Firmware_Update() on firmware start-up.
@@ -20,7 +20,7 @@ v1.5    - Current firmware version sendind to RTDB.
 v1.6    - New firmware structure based on finite state machine, no more just ISR.
 v1.7  	- 'Firebase-ESP32' library updated from v3.2.0 to v3.3.0.
 		- Minor improvements in variables/functions names (more intuitive code reading).
-		- Bug fix in Last_Task fild (data being erased after some time).
+		- Bug fix in Last_Task fild (data being erased after some remote_time_adj).
 v1.8 	- Static variables changed to extern where appropriate.
 v1.8.1 	- Now, Firebase_Get runs 'FirebaseReady' to ensure the connection in while loops.
 		- 'Firebase-ESP32' library updated from v3.3.0 to v3.2.2 (author's downgrade)
@@ -52,15 +52,69 @@ v2.0    - Porting whole firmware to a new hardware platform: M5StickC Plus.
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
+#define LOCAL_ADJ 1
+uint8_t predominant_adj = 0;
+String local_time_adj;
+
+#define DISPLAY_TURN_OFF_TIMEOUT (1 * 60 * 1000) // 1 MINUTE
+uint32_t turnOff_display_timeout = 0;
+
+bool display_power_state_controller(uint8_t state) {
+
+	static bool current_state = true;
+	static bool last_state = true;
+
+	if (last_state != current_state)
+		last_state = current_state;
+
+	switch (state) {
+
+		case HIGH: {
+			if (last_state != state) {
+				M5.Axp.SetLDO2(true);
+				Serial.println("DISPLAY TURN ON");
+			}
+			turnOff_display_timeout = millis();
+			current_state = true;
+			break;
+		}
+
+		case LOW: {
+			if (last_state != state) {
+				M5.Axp.SetLDO2(false);
+				Serial.println("DISPLAY TURN OFF");
+			}
+			current_state = false;
+			last_state = false;
+			break;
+		}
+	}
+
+	return last_state;
+}
+
 void Download_Cloud_Data() {
 
 	if (Firebase.RTDB.getString(&fbdo, F("/START"))) {
 
-		String time = fbdo.to<const char*>();
+		String remote_time_adj = fbdo.to<const char*>();
 
-		if (isValid_Time(time)) {
+		if (isValid_Time(remote_time_adj)) {
 
-			Next_Task = time;
+			if (predominant_adj == LOCAL_ADJ) {
+				if (local_time_adj == remote_time_adj) {
+					Next_Task = remote_time_adj;
+					predominant_adj = 0;
+				}
+			}
+			else {
+				static String last_remote_time_adj = remote_time_adj;
+				Next_Task = remote_time_adj;
+				if (Next_Task != last_remote_time_adj) {
+					display_power_state_controller(HIGH);
+					last_remote_time_adj = Next_Task;
+				}
+			}
 
 			/* 			JSON.clear();
 						if (Get_Firebase_JSON_at("/Notification_Tokens", &JSON)) {
@@ -90,8 +144,10 @@ void Upload_Cloud_Data() {
 
 	if (Next_Task == Washing_Machine.FAIL)
 		json.add(F("/START"), Washing_Machine.FAIL);
-	if (Next_Task != Washing_Machine.FREE)
+	if (Next_Task != Washing_Machine.FREE || predominant_adj == LOCAL_ADJ){
 		json.add(F("/START"), Next_Task);
+		predominant_adj = 0;
+	}
 	else if (Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED))
 		json.add(F("/START"), Washing_Machine.WORKING);
 
@@ -125,20 +181,62 @@ void Firebase_Tasks(void* arg) {
 
 		if (Firebase.ready() && (millis() - t0 >= 15000 || !t0)) {
 			t0 = millis();
-
-			Upload_Cloud_Data();
 			Download_Cloud_Data();
+			Upload_Cloud_Data();
 		}
 	}
 }
 
 void adjustment_monitor() {
 
-#define DEBUG_MODE 1
-
 	M5.update();
 
+	static uint32_t t0 = 0;
+	static uint32_t t1 = 0;
+	static bool count_secs = true;
+	static bool beep = false;
+	const uint8_t hold_time_trigger = 3;
+
+	if (M5.BtnA.isPressed() || M5.BtnB.isPressed()) {
+
+		if (count_secs) {
+			t0 = millis();
+			count_secs = false;
+		}
+
+		if ((millis() - t0) >= 1000) {
+			t1++;
+			count_secs = true;
+		}
+
+		if (t1 >= hold_time_trigger && !beep) {
+			M5.Beep.beep();
+			delay(50);
+			M5.Beep.mute();
+			delay(50);
+			beep = true;
+		}
+	}
+
 	if (M5.BtnA.wasReleased() || M5.BtnB.wasReleased()) {
+
+		/*
+		 If the last diplsay state was turn off (LOW), this click doesn't means a task time adjustment request.
+		 This just means a request to turn-on the diplsay, so, just return from here.
+		*/
+		if (!display_power_state_controller(HIGH))
+			return;
+
+		if (t1 >= hold_time_trigger) {
+			Next_Task = Washing_Machine.FREE;
+			local_time_adj = Washing_Machine.FREE;
+			predominant_adj = LOCAL_ADJ;
+			t0 = 0;
+			t1 = 0;
+			count_secs = true;
+			beep = false;
+			return;
+		}
 
 		int hour = Next_Task.substring(0, Next_Task.indexOf(":")).toInt();
 		int min = Next_Task.substring(Next_Task.indexOf(":") + 1).toInt();
@@ -147,22 +245,6 @@ void adjustment_monitor() {
 
 			M5.Rtc.GetTime(&RTC_TimeStruct);
 
-		#ifdef DEBUG_MODE
-
-			if (RTC_TimeStruct.Minutes == 59) {
-
-				hour = RTC_TimeStruct.Hours;
-				hour++;
-				if (hour >= 24)
-					hour = 0;
-
-				min = 0;
-			}
-			else {
-				hour = RTC_TimeStruct.Hours;
-				min = RTC_TimeStruct.Minutes + 1;
-			}
-		#else
 			if (RTC_TimeStruct.Minutes > 50) {
 
 				hour = RTC_TimeStruct.Hours;
@@ -176,7 +258,6 @@ void adjustment_monitor() {
 				hour = RTC_TimeStruct.Hours;
 				min = RTC_TimeStruct.Minutes + (10 - (RTC_TimeStruct.Minutes % 10));
 			}
-		#endif
 		}
 
 	#define ADJ_MINS 1
@@ -280,12 +361,7 @@ void adjustment_monitor() {
 				}
 
 				if (adj_step == ADJ_HOURS) {
-				#ifdef DEBUG_MODE
-					min += 1;
-				#else
 					min += 10;
-				#endif
-
 					if (min >= 60)
 						min = 0;
 				}
@@ -321,6 +397,11 @@ void adjustment_monitor() {
 			sprintf(buf, "%02d:%02d", hour, min);
 
 			Next_Task = buf;
+
+			//------------
+			predominant_adj = LOCAL_ADJ;
+			local_time_adj = Next_Task;
+			//------------
 
 			for (uint8_t i = 0; i < 3; i++) {
 				M5.Beep.beep();
@@ -358,6 +439,8 @@ void setup() {
 }
 
 void loop() {
+	if ((millis() - turnOff_display_timeout) >= DISPLAY_TURN_OFF_TIMEOUT)
+		display_power_state_controller(LOW);
 
 	System_States_Manager();
 }
@@ -385,8 +468,10 @@ void System_States_Manager() {
 
 			TFT_Clear();
 
-			if (Task.running)
+			if (Task.running) {
 				TFT_Build_Working_Screen(Task_Duration_Calc(Task.initial_timestamp, Get_Current_Timestamp()), FIRMWARE_VERSION);
+				display_power_state_controller(HIGH);
+			}
 			else
 				TFT_Build_Home_Screen(Next_Task, FIRMWARE_VERSION);
 
