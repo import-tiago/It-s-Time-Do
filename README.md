@@ -17,6 +17,9 @@ The hardware device can trigger a web push notification to notify web clients of
  <p align="center"><img src="https://github.com/TiagoPaulaSilva/It-s-Time-Do/blob/main/Assets/RTDB_Preview.png" width=70%" height="70%"></p>
   
 ## Circuit Diagram
+Controller: [M5StickC PLUS](https://docs.m5stack.com/en/core/m5stickc_plus) - [M5Stack Official Store](https://pt.aliexpress.com/item/1005003297502591.html?spm=a2g0o.order_list.order_list_main.10.3023caa4s3zJPO&gatewayAdapt=glo2bra)<br/>
+Module: [Unit Relay](https://docs.m5stack.com/en/unit/relay) - [M5Stack Official Store](https://pt.aliexpress.com/item/1005003299262655.html?spm=a2g0o.order_list.order_list_main.11.3023caa4s3zJPO&gatewayAdapt=glo2bra)
+
 <img src="https://github.com/TiagoPaulaSilva/It-s-Time-Do/blob/main/Assets/Circuit.png" alt="CircuitDiagram" width="100%"/>
 
 ### Contributing
