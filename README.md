@@ -16,7 +16,7 @@ The hardware device can trigger a web push notification to notify web clients of
  Through Firebase's Real Time Database (RTDB), it is possible to monitor instant __It's Time, Do!__ hardware device parameters, such as local date, local time, status of the scheduled task and current firmware version; as well as status of the device being controlled (in my case, the washing machine), whether or not it is working, log of all previous tasks with start and finished date and time of each one.
  <p align="center"><img src="https://github.com/TiagoPaulaSilva/It-s-Time-Do/blob/main/Assets/RTDB_Preview.png" width=70%" height="70%"></p>
   
-## Circuit Diagram
+## Hardware / Circuit Diagram
 Controller: [M5StickC PLUS](https://docs.m5stack.com/en/core/m5stickc_plus) - [M5Stack Official Store](https://pt.aliexpress.com/item/1005003297502591.html?spm=a2g0o.order_list.order_list_main.10.3023caa4s3zJPO&gatewayAdapt=glo2bra)<br/>
 Module: [Unit Relay](https://docs.m5stack.com/en/unit/relay) - [M5Stack Official Store](https://pt.aliexpress.com/item/1005003299262655.html?spm=a2g0o.order_list.order_list_main.11.3023caa4s3zJPO&gatewayAdapt=glo2bra)
 
