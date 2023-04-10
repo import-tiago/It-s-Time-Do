@@ -90,7 +90,6 @@ void build_status_bar() {
 	char data[5];
 
 	tftSprite.fillRect(0, 0, 240, 35, 0x018C); // Berkeley Blue (RGB-565)
-	tftSprite.setTextColor(0xEFBF); // Alice Blue (RGB-565)
 	tftSprite.setFreeFont(&Orbitron_Light_24);
 
 	static uint16_t last_bat_percentage = 0;
@@ -100,11 +99,18 @@ void build_status_bar() {
 
 	if (last_bat_percentage > 100)
 		last_bat_percentage = 100;
-
-	if (last_bat_percentage < bat_percentage)
-		bat_percentage = last_bat_percentage;
-
-	sprintf(data, "%u%%", bat_percentage);
+		
+	if (M5.Axp.GetVBusVoltage()>= 4.0F) {
+		tftSprite.setTextColor(0xEFBF); // Alice Blue (RGB-565)
+		sprintf(data, "%u%%", last_bat_percentage);
+	}
+	else {
+		tftSprite.setTextColor(RED);
+		if (last_bat_percentage < bat_percentage) {
+			bat_percentage = last_bat_percentage;
+		}
+		sprintf(data, "%u%%", bat_percentage);
+	}
 
 	tftSprite.setTextDatum(CR_DATUM);
 	tftSprite.drawString(data, tftSprite.width() - 5, 13);

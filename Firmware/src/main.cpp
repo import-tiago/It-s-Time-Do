@@ -108,11 +108,12 @@ void Download_Cloud_Data() {
 				}
 			}
 			else {
-				static String last_remote_time_adj = remote_time_adj;
+				static String last_remote_time_adj = Washing_Machine.FREE;
 				Next_Task = remote_time_adj;
 				if (Next_Task != last_remote_time_adj) {
+					Serial.println("NEW TIME FROM CLOUD");
+					last_remote_time_adj = remote_time_adj;
 					display_power_state_controller(HIGH);
-					last_remote_time_adj = Next_Task;
 				}
 			}
 
@@ -123,8 +124,11 @@ void Download_Cloud_Data() {
 						} */
 		}
 		else {
-			if (!Task.running && Next_Task != Washing_Machine.FREE)
+
+			if (!Task.running && predominant_adj != LOCAL_ADJ) {
+				Serial.println("A");
 				Next_Task = Washing_Machine.FREE;
+			}
 		}
 	}
 	else
@@ -141,16 +145,16 @@ void Upload_Cloud_Data() {
 	json.add(F("/IoT_Device/Firmware_Version"), FIRMWARE_VERSION);
 
 	json.add(F("/Washing_Machine/State"), Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED) ? "ON" : "OFF");
+	Serial.println(Next_Task);
 
 	if (Next_Task == Washing_Machine.FAIL)
 		json.add(F("/START"), Washing_Machine.FAIL);
-	if (Next_Task != Washing_Machine.FREE || predominant_adj == LOCAL_ADJ){
-		json.add(F("/START"), Next_Task);
-		predominant_adj = 0;
-	}
-	else if (Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED))
-		json.add(F("/START"), Washing_Machine.WORKING);
 
+	if (predominant_adj == LOCAL_ADJ)
+		json.add(F("/START"), Next_Task);
+
+	//if (Next_Task == Washing_Machine.FREE)
+	//	json.add(F("/START"), Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED) ? Washing_Machine.WORKING : Washing_Machine.FREE);
 
 	if (Task.new_report) {
 		Task.new_report = false;
@@ -484,7 +488,6 @@ void System_States_Manager() {
 		case LOCAL_TRIGGER_MONITOR: {
 
 			if (!Task.running && Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED)) {
-
 				Next_Task = Washing_Machine.WORKING;
 
 				Task.running = true;
