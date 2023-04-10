@@ -124,11 +124,8 @@ void Download_Cloud_Data() {
 						} */
 		}
 		else {
-
-			if (!Task.running && predominant_adj != LOCAL_ADJ) {
-				Serial.println("A");
+			if (!Task.running && predominant_adj != LOCAL_ADJ)
 				Next_Task = Washing_Machine.FREE;
-			}
 		}
 	}
 	else
@@ -145,7 +142,6 @@ void Upload_Cloud_Data() {
 	json.add(F("/IoT_Device/Firmware_Version"), FIRMWARE_VERSION);
 
 	json.add(F("/Washing_Machine/State"), Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED) ? "ON" : "OFF");
-	Serial.println(Next_Task);
 
 	if (Next_Task == Washing_Machine.FAIL)
 		json.add(F("/START"), Washing_Machine.FAIL);
