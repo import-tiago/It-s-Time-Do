@@ -496,7 +496,7 @@ void System_States_Manager() {
 			if (isValid_Time(Next_Task))
 				Current_System_State = SCHEDULED_TRIGGER_MONITOR;
 			else
-				Current_System_State = LOCAL_SCHEDULE_ADJUSTMENT;
+				Current_System_State = TASK_STATUS_MONITOR;
 
 			break;
 		}
