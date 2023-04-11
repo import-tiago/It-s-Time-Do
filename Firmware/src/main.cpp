@@ -493,7 +493,11 @@ void System_States_Manager() {
 				//Send_Web_Push_Notification(Push_Notification.init.TASK_INIT);
 			}
 
-			Current_System_State = SCHEDULED_TRIGGER_MONITOR;
+			if (isValid_Time(Next_Task))
+				Current_System_State = SCHEDULED_TRIGGER_MONITOR;
+			else
+				Current_System_State = LOCAL_SCHEDULE_ADJUSTMENT;
+
 			break;
 		}
 
