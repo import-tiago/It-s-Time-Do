@@ -162,4 +162,4 @@ makeTime(&tm);         // return time_t from elements stored in tm struct
 This [DS1307RTC library][1] provides an example of how a time provider
 can use the low-level functions to interface with the Time library.
 
-[1]:<https://github.com/PaulStoffregen/DS1307RTC>
+[1]:<https://github.com/import-tiago/DS1307RTC>
