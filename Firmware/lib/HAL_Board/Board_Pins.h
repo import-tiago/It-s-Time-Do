@@ -6,6 +6,6 @@
 #define WASHING_MACHINE_POWER_LED 33
 #define RELAY 32
 
-void Board_Pins_Init();
+void init_gpios();
 
 #endif // HAL_BOARD_H

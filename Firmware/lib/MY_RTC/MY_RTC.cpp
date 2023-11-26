@@ -76,30 +76,50 @@ uint32_t Calc_Timestamp(uint16_t hour, uint16_t min, uint16_t sec, uint16_t day,
 	return mktime(&tm);
 }
 
-void Set_RTC(char const* date, char const* time) {
+void set_rtc_ic_from_internal_esp_rtc() {
 
-	char s_month[5];
-	int year;
-	tmElements_t  t;
-	static const char month_names[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
-
-	sscanf(date, "%s %hhd %d", s_month, &t.Day, &year);
-	sscanf(time, "%2hhd %*c %2hhd %*c %2hhd", &t.Hour, &t.Minute, &t.Second);
-
-	// Find where is s_month in month_names. Deduce month value.
-	t.Month = (strstr(month_names, s_month) - month_names) / 3 + 1;
-
-	t.Year = year - 2000;
+	struct tm timeinfo;
+	if (!getLocalTime(&timeinfo)) {
+		Serial.println("RTC ESP fail!");
+		return;
+	}
 
 	RTC_TimeTypeDef TimeStruct;
-	TimeStruct.Hours = t.Hour;
-	TimeStruct.Minutes = t.Minute + 1;
-	TimeStruct.Seconds = 30;
+	TimeStruct.Hours = timeinfo.tm_hour;
+	TimeStruct.Minutes = timeinfo.tm_min;
+	TimeStruct.Seconds = timeinfo.tm_sec;
 	M5.Rtc.SetTime(&TimeStruct);
 
 	RTC_DateTypeDef DateStruct;
-	DateStruct.Date = t.Day;
-	DateStruct.Month = t.Month;
-	DateStruct.Year = t.Year + 2000;
+	DateStruct.Date = timeinfo.tm_mday;
+	DateStruct.WeekDay = timeinfo.tm_wday;
+	DateStruct.Month = timeinfo.tm_mon;
+	DateStruct.Year = timeinfo.tm_year;
 	M5.Rtc.SetDate(&DateStruct);
+}
+
+void setTimezone(const char* timezone) {
+	setenv("TZ", timezone, 1);
+	tzset();
+}
+
+//https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv
+void set_internal_esp_rtc_from_ntp(const char* timezone) {
+	struct tm timeinfo;
+	configTime(0, 0, "pool.ntp.org");
+	if (!getLocalTime(&timeinfo)) {
+		Serial.println();
+		Serial.print("NTP fail!");
+		return;
+	}
+	setTimezone(timezone);
+}
+
+void print_local_time() {
+	struct tm timeinfo;
+	if (!getLocalTime(&timeinfo)) {
+		Serial.println("RTC fail!");
+		return;
+	}
+	Serial.println(&timeinfo, "%A, %d %B %Y - %H:%M:%S");
 }

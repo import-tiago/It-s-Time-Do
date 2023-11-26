@@ -1,6 +1,6 @@
 #include "Network.h"
 
-bool WiFi_Init() {
+bool init_wifi() {
 
 	tftSprite.fillSprite(0x1924); // Berkeley Blue (RGB-565)
 	tftSprite.setFreeFont(&FreeMono12pt7b);
@@ -61,6 +61,10 @@ bool WiFi_Init() {
 	}
 	else
 		wifi_connected = true;
+
+	set_internal_esp_rtc_from_ntp("<-03>3"); // São Paulo/BR
+	set_rtc_ic_from_internal_esp_rtc();
+	print_local_time();
 
 	tftSprite.println("\nSuccess!");
 	TFT_Print();

@@ -1,13 +1,10 @@
-#ifndef NETWORK_H
-#define NETWORK_H
+#pragma once
 
 #include <M5StickCPlus.h>
 #include "Free_Fonts.h"
 #include <WiFi.h>
-
 #include "WiFi_Secrets.h"
 #include "Display.h"
+#include "MY_RTC.h"
 
-bool WiFi_Init();
-
-#endif // NETWORK_H
+bool init_wifi();

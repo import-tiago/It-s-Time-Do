@@ -6,32 +6,87 @@ float mapFloat(float value, float fromLow, float fromHigh, float toLow, float to
 	return (value - fromLow) * (toHigh - toLow) / (fromHigh - fromLow) + toLow;
 }
 
+// https://www.intuitibits.com/2016/03/23/dbm-to-percent-conversion/
+uint8_t dbm_to_percentage(int32_t x) {
+
+	double terms[] = {
+	   1.0129164847745008e+002,
+	   6.3851080179060804e-001,
+	   8.1495412855494276e-002,
+	   3.9813931665165676e-003,
+	   7.9434290319747218e-005,
+	   7.5618040548178771e-007,
+	   2.7481110222633460e-009
+	};
+
+	size_t csz = sizeof terms / sizeof * terms;
+
+	double t = 1;
+	double r = 0;
+	for (int i = 0; i < csz;i++) {
+		r += terms[i] * t;
+		t *= x;
+	}
+	return (uint8_t)r;
+}
+
+float noving_avg(uint16_t instantaneous_value, int16_t* array_values, uint16_t array_len) {
+	float average = 0;
+	uint16_t z = 0;
+
+	// Shifts the entire buffer and discards the oldest value
+	for (z = array_len - 1; z > 0; z--)
+		*(&array_values[z]) = *(&array_values[z - 1]);
+
+	*(&array_values[0]) = instantaneous_value;
+
+	for (z = 0; z < array_len; z++)
+		average += *(&array_values[z]);
+
+	return average / (float)array_len;
+}
+
 void build_wifi_status() {
 
 	if (wifi_connected) {
 
-		int8_t dBm = 0;
-		uint8_t quality_percentage = 0;
+		static int16_t rssi_mean = 0;
+		static uint8_t wifi_signal_quality = 0;
+		const uint16_t RSSI_BUF_SIZE = 150;
+
+		static uint32_t t0 = millis();
+		if ((millis() - t0 >= 200)) {
+			t0 = millis();
+
+			static int16_t rssi_buf[RSSI_BUF_SIZE];
+
+			static bool once = false;
+			if (!once) {
+				once = true;
+				for (uint16_t i = 0; i < RSSI_BUF_SIZE; i++) {
+					noving_avg(WiFi.RSSI(), &rssi_buf[0], RSSI_BUF_SIZE); //fill buffer
+				}
+			}
+
+			rssi_mean = noving_avg(WiFi.RSSI(), &rssi_buf[0], RSSI_BUF_SIZE);
+			wifi_signal_quality = dbm_to_percentage(rssi_mean);
+
+			if (wifi_signal_quality > 100)
+				wifi_signal_quality = 100;
+			else if (wifi_signal_quality < 0)
+				wifi_signal_quality = 0;
+		}
 
 		tftSprite.setTextColor(0xEFBF); // Alice Blue (RGB-565)
 		tftSprite.setFreeFont(&FreeMono9pt7b);
 
-		dBm = WiFi.RSSI();
-
-		if (dBm <= -100)
-			quality_percentage = 0;
-		else if (dBm >= -50)
-			quality_percentage = 100;
-		else
-			quality_percentage = 2 * (dBm + 100);
-
 		tftSprite.setCursor(45, 14);
 		char buf[10];
-		sprintf(buf, "%ddBm", dBm);
+		sprintf(buf, "%ddBm", rssi_mean);
 		tftSprite.print(buf);
 
 		tftSprite.setCursor(45, 30);
-		sprintf(buf, "%u%%", quality_percentage);
+		sprintf(buf, "%u%%", wifi_signal_quality);
 		tftSprite.print(buf);
 
 
@@ -43,25 +98,25 @@ void build_wifi_status() {
 		const uint16_t high_color = 0x7FDF; // Electric blue (RGB-565)
 		const uint16_t low_color = DARKGREY;
 
-		if (dBm > -50 & !dBm == 0)
+		if (rssi_mean > -50 & !rssi_mean == 0)
 			tftSprite.fillRoundRect(x + 24, y - 6, w, h + 6, radius, high_color);
 		else
 			tftSprite.fillRoundRect(x + 24, y - 6, w, h + 6, radius, low_color);
 
 
-		if (dBm > -70 & !dBm == 0)
+		if (rssi_mean > -70 & !rssi_mean == 0)
 			tftSprite.fillRoundRect(x + 16, y - 4, w, h + 4, radius, high_color);
 		else
 			tftSprite.fillRoundRect(x + 16, y - 4, w, h + 4, radius, low_color);
 
 
-		if (dBm > -80 & !dBm == 0)
+		if (rssi_mean > -80 & !rssi_mean == 0)
 			tftSprite.fillRoundRect(x + 8, y - 2, w, h + 2, radius, high_color);
 		else
 			tftSprite.fillRoundRect(x + 8, y - 2, w, h + 2, radius, low_color);
 
 
-		if (dBm > -90 & !dBm == 0)
+		if (rssi_mean > -90 & !rssi_mean == 0)
 			tftSprite.fillRoundRect(x, y, w, h, radius, high_color);
 		else
 			tftSprite.fillRoundRect(x, y, w, h, radius, low_color);
@@ -99,8 +154,8 @@ void build_status_bar() {
 
 	if (last_bat_percentage > 100)
 		last_bat_percentage = 100;
-		
-	if (M5.Axp.GetVBusVoltage()>= 4.0F) {
+
+	if (M5.Axp.GetVBusVoltage() >= 4.0F) {
 		tftSprite.setTextColor(0xEFBF); // Alice Blue (RGB-565)
 		sprintf(data, "%u%%", last_bat_percentage);
 	}
@@ -150,7 +205,7 @@ void build_next_task() {
 	tftSprite.drawString(data, tftSprite.width() / 2, tftSprite.height() - 7);
 }
 
-void TFT_Init() {
+void init_tft_display() {
 	M5.Lcd.setRotation(1);
 	tftSprite.createSprite(M5.Lcd.width(), M5.Lcd.height());
 	tftSprite.setRotation(1);

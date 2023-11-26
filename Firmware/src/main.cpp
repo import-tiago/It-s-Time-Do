@@ -1,4 +1,4 @@
-#define FIRMWARE_VERSION "2.00"
+#define FIRMWARE_VERSION "2.1"
 /*
 v1.0    - Initial release.
 v1.1    - Bug fix in task duration calcs.
@@ -33,6 +33,8 @@ v1.11 	- 'Firebase-ESP32' library updated from v3.3.6 to v4.0.0.
 v1.12 	- Fixed espressif32 platform at v3.5.0 because mbedtls (associated function) seems to have broken a bunch of libraries using it at new versions.
 v1.13 	- 'Firebase-ESP32' library updated from v4.0.0 to v4.1.0.
 v2.0    - Porting whole firmware to a new hardware platform: M5StickC Plus.
+v2.1    - RTC IC from M5StickC Plus auto-update from NTP server after successfully Wi-Fi connection.
+		- RSSI and Wi-Fi quality stability improved.
 */
 
 /* Native libraries */
@@ -93,7 +95,7 @@ bool display_power_state_controller(uint8_t state) {
 	return last_state;
 }
 
-void Download_Cloud_Data() {
+void download_cloud_data() {
 
 	if (Firebase.RTDB.getString(&fbdo, F("/START"))) {
 
@@ -132,7 +134,7 @@ void Download_Cloud_Data() {
 		Serial.println(fbdo.errorReason().c_str());
 }
 
-void Upload_Cloud_Data() {
+void upload_cloud_data() {
 
 	FirebaseJson json;
 
@@ -173,7 +175,7 @@ void Upload_Cloud_Data() {
 	Serial.printf("update node... %s\n", Firebase.RTDB.updateNode(&fbdo, F("/"), &json) ? "ok" : fbdo.errorReason().c_str());
 }
 
-void Firebase_Tasks(void* arg) {
+void firebase_tasks(void* arg) {
 
 	while (1) {
 
@@ -181,8 +183,8 @@ void Firebase_Tasks(void* arg) {
 
 		if (Firebase.ready() && (millis() - t0 >= 15000 || !t0)) {
 			t0 = millis();
-			Download_Cloud_Data();
-			Upload_Cloud_Data();
+			download_cloud_data();
+			upload_cloud_data();
 		}
 	}
 }
@@ -413,39 +415,7 @@ void adjustment_monitor() {
 	}
 }
 
-void System_States_Manager();
-
-void setup() {
-
-	Board_Pins_Init();
-
-	TFT_Init();
-
-	if (WiFi_Init()) {
-		Firebase_Init();
-		//Checks_OTA_Firmware_Update();
-	}
-
-	xTaskCreatePinnedToCore(
-		Firebase_Tasks,
-		"FirebaseTasks",
-		8192,
-		NULL,
-		1,
-		NULL,
-		1);
-
-	//Set_RTC(__DATE__, __TIME__);
-}
-
-void loop() {
-	if ((millis() - turnOff_display_timeout) >= DISPLAY_TURN_OFF_TIMEOUT)
-		display_power_state_controller(LOW);
-
-	System_States_Manager();
-}
-
-void System_States_Manager() {
+void system_states_manager() {
 
 	switch (Current_System_State) {
 
@@ -544,3 +514,22 @@ void System_States_Manager() {
 		}
 	}
 }
+
+void setup() {
+
+	init_gpios();
+	init_tft_display();
+
+	if (init_wifi())
+		init_firebase();
+
+	xTaskCreatePinnedToCore(firebase_tasks, "FirebaseTasks", 8 * 1024, NULL, 1, NULL, 1);
+}
+
+void loop() {
+	if ((millis() - turnOff_display_timeout) >= DISPLAY_TURN_OFF_TIMEOUT)
+		display_power_state_controller(LOW);
+
+	system_states_manager();
+}
+

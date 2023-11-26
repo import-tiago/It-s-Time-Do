@@ -62,7 +62,7 @@ extern struct Push_Notifications Push_Notification;
 void fcsDownloadCallback(FCS_DownloadStatusInfo info);
 void Download_New_Firmware_by_OTA();
 void Checks_OTA_Firmware_Update();
-void Firebase_Init();
+void init_firebase();
 bool isValid_Time(String from_cloud);
 bool Set_Firebase_JSON_at(String Database_Path, FirebaseJson* json);
 bool Get_Firebase_JSON_at(String Database_Path, FirebaseJson* json);

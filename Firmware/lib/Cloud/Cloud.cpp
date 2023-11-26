@@ -112,7 +112,7 @@ void Checks_OTA_Firmware_Update() {
 	}
 }
 
-void Firebase_Init() {
+void init_firebase() {
 	//Display_Firebase_Connecting();
 	Serial.printf("Firebase Client v%s\n\n", FIREBASE_CLIENT_VERSION);
 

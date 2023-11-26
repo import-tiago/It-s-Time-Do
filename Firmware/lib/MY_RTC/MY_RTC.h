@@ -24,7 +24,9 @@ String Current_Date(int format);
 String Current_Clock(int format);
 uint32_t Get_Current_Timestamp();
 uint32_t Calc_Timestamp(uint16_t hour, uint16_t min, uint16_t sec, uint16_t day, uint16_t month, uint16_t year);
-void Set_RTC(char const* date, char const* time);
+void set_rtc_ic_from_internal_esp_rtc();
+void set_internal_esp_rtc_from_ntp(const char* timezone);
+void print_local_time();
 //uint32_t Get_Timestamp(uint8_t hrs, uint8_t min, uint8_t sec, uint8_t day, uint8_t mon, uint16_t year);
 
 #endif //RTC_H

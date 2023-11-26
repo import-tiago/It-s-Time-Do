@@ -11,7 +11,7 @@
 
 extern TFT_eSprite tftSprite;
 
-void TFT_Init();
+void init_tft_display();
 
 void TFT_Build_Home_Screen(String _Schedule_Time, String Firmware_Version);
 void TFT_Clear();

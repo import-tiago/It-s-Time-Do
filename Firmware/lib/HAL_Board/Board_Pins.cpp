@@ -1,6 +1,6 @@
 #include "Board_Pins.h"
 
-void Board_Pins_Init() {
+void init_gpios() {
 
 	 M5.begin();
 
