@@ -7,9 +7,9 @@ bool wifi_connected = false;
 
 void trigger_output() {
 
-	digitalWrite(RELAY, HIGH);
+	digitalWrite(TARGET_DEVICE_POWER_SWITCH, HIGH);
 	delay(300);
-	digitalWrite(RELAY, LOW);
+	digitalWrite(TARGET_DEVICE_POWER_SWITCH, LOW);
 
 	M5.Beep.beep();
 	delay(50);
@@ -48,7 +48,7 @@ bool Wait_Washing_Machine_Initialize() {
 
 		TFT_Clear();
 		TFT_Wait_Task_Initialize_Screen(timeout);
-		TFT_Print();
+		tftSprite.pushSprite(0, 0);
 
 		Serial.println("Waiting LED power on...");
 		delay(1000);
@@ -61,7 +61,7 @@ bool Wait_Washing_Machine_Initialize() {
 			Send_Web_Push_Notification(Push_Notification.fail.TASK_FAIL);
 		}
 
-	} while (!Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED) && !fail);
+	} while (!Get_Washing_Machine_Power_State(TARGET_DEVICE_POWER_LED) && !fail);
 
 	Washing_Machine.Initializing = false;
 

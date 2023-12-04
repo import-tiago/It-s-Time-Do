@@ -3,9 +3,9 @@
 
 #include <M5StickCPlus.h>
 #include "MY_RTC.h"
-#include "Board_Pins.h"
+#include "my_hal.h"
 #include "Cloud.h"
-#include "Display.h"
+#include "my_display.h"
 
 #define VOLTAGE_DROP_LED 0.70F
 

@@ -42,13 +42,11 @@ v2.1    - RTC IC from M5StickC Plus auto-update from NTP server after successful
 #include "Free_Fonts.h"
 
 /* Own libraries */
-#include "Firebase_Secrets.h"
-#include "Network.h"
-#include "WiFi_Secrets.h"
+#include "my_network.h"
 #include "Main_Application.h"
 #include "MY_RTC.h"
-#include "Display.h"
-#include "Board_Pins.h"
+#include "my_display.h"
+#include "my_hal.h"
 
 #include "soc/rtc_wdt.h"
 #include <freertos/FreeRTOS.h>
@@ -143,7 +141,7 @@ void upload_cloud_data() {
 	json.add(F("/IoT_Device/Schedule"), Next_Task);
 	json.add(F("/IoT_Device/Firmware_Version"), FIRMWARE_VERSION);
 
-	json.add(F("/Washing_Machine/State"), Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED) ? "ON" : "OFF");
+	json.add(F("/Washing_Machine/State"), Get_Washing_Machine_Power_State(TARGET_DEVICE_POWER_LED) ? "ON" : "OFF");
 
 	if (Next_Task == Washing_Machine.FAIL)
 		json.add(F("/START"), Washing_Machine.FAIL);
@@ -152,7 +150,7 @@ void upload_cloud_data() {
 		json.add(F("/START"), Next_Task);
 
 	//if (Next_Task == Washing_Machine.FREE)
-	//	json.add(F("/START"), Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED) ? Washing_Machine.WORKING : Washing_Machine.FREE);
+	//	json.add(F("/START"), Get_Washing_Machine_Power_State(TARGET_DEVICE_POWER_LED) ? Washing_Machine.WORKING : Washing_Machine.FREE);
 
 	if (Task.new_report) {
 		Task.new_report = false;
@@ -445,7 +443,7 @@ void system_states_manager() {
 			else
 				TFT_Build_Home_Screen(Next_Task, FIRMWARE_VERSION);
 
-			TFT_Print();
+			tftSprite.pushSprite(0, 0);
 
 			Current_System_State = LOCAL_TRIGGER_MONITOR;
 			break;
@@ -453,7 +451,7 @@ void system_states_manager() {
 
 		case LOCAL_TRIGGER_MONITOR: {
 
-			if (!Task.running && Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED)) {
+			if (!Task.running && Get_Washing_Machine_Power_State(TARGET_DEVICE_POWER_LED)) {
 				Next_Task = Washing_Machine.WORKING;
 
 				Task.running = true;
@@ -484,7 +482,7 @@ void system_states_manager() {
 			uint32_t current_timestamp = Get_Current_Timestamp();
 			uint32_t schedule_timestamp = Calc_Timestamp(hour, min, sec, day, month, year);
 
-			if (((current_timestamp >= schedule_timestamp) && (current_timestamp <= (schedule_timestamp + 120))) && !Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED))
+			if (((current_timestamp >= schedule_timestamp) && (current_timestamp <= (schedule_timestamp + 120))) && !Get_Washing_Machine_Power_State(TARGET_DEVICE_POWER_LED))
 				Start_Task();
 			else
 				Current_System_State = TASK_STATUS_MONITOR;
@@ -494,7 +492,7 @@ void system_states_manager() {
 
 		case TASK_STATUS_MONITOR: {
 
-			if (Task.running && !Get_Washing_Machine_Power_State(WASHING_MACHINE_POWER_LED)) {
+			if (Task.running && !Get_Washing_Machine_Power_State(TARGET_DEVICE_POWER_LED)) {
 
 				Task.running = false;
 
